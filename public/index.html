@@ -1,18 +1,27 @@
-<!-- public/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Planning Poker</title>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     .card { display: inline-block; padding: 20px; margin: 5px; border: 1px solid #ccc; font-size: 20px; width: 50px; text-align: center; }
     .user-list { margin-top: 10px; }
     .user-item { display: flex; align-items: center; }
     .user-item span { margin-left: 5px; }
-    .status-icon { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .status-icon { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 3px;}
     .voted { background-color: green; }
     .not-voted { background-color: gray; }
+    #averageChart { display: none; width: 100%; max-width: 400px; margin-top: 20px; }
+
+
+    #taskDetails {
+      font-size: 1.5em;
+    }
+    #voting {
+      padding: 20px 0 20px 0;
+    }
   </style>
 </head>
 <body>
@@ -28,12 +37,14 @@
   <div id="taskDetails"></div>
 
   <div id="voting" style="display: none;">
+    <button onclick="castVote(0)">0</button>
     <button onclick="castVote(1)">1</button>
     <button onclick="castVote(2)">2</button>
     <button onclick="castVote(3)">3</button>
     <button onclick="castVote(5)">5</button>
     <button onclick="castVote(8)">8</button>
     <button onclick="castVote(13)">13</button>
+    <button onclick="castVote(21)">21</button>
   </div>
 
   <div id="hostControls" style="display: none;">
@@ -43,6 +54,8 @@
 
   <div id="results"></div>
   <div class="user-list" id="userList"></div>
+
+  <canvas id="averageChart"></canvas>
 
   <script>
     const socket = io();
@@ -103,8 +116,11 @@
         document.getElementById('voting').style.display = 'block'; // Show voting cards immediately
       });
 
-      socket.on('votesUpdate', (votes, reveal) => {
+      socket.on('votesUpdate', (votes, reveal, averageVote) => {
         displayVotes(votes, reveal);
+        if (reveal && averageVote !== undefined) {
+          showAverageChart(averageVote);
+        }
       });
     }
 
@@ -127,7 +143,7 @@
       for (const [user, vote] of Object.entries(votes)) {
         const card = document.createElement('div');
         card.className = 'card';
-        card.textContent = reveal ? vote : '?';
+        card.textContent = user + '-' + (reveal ? vote : '?');
         resultsDiv.appendChild(card);
       }
     }
@@ -148,6 +164,32 @@
         userItem.appendChild(document.createTextNode(user));
         userList.appendChild(userItem);
       }
+    }
+
+    function showAverageChart(averageVote) {
+      const ctx = document.getElementById('averageChart').getContext('2d');
+      document.getElementById('averageChart').style.display = 'block';
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Average Points'],
+          datasets: [{
+            label: 'Average Points',
+            data: [averageVote],
+            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
     }
   </script>
 </body>
