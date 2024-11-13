@@ -97,6 +97,13 @@
         updateUserList(users);
         document.getElementById('voting').style.display = 'block';
       });
+
+      socket.on('votesUpdate', (votes, reveal, averageVote) => {
+        displayVotes(votes, reveal);
+        if (reveal && averageVote !== undefined) {
+          showAverageChart(averageVote);
+        }
+      });
     }
 
     function joinTask() {
