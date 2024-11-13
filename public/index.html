@@ -34,9 +34,10 @@
 
     .highlight-low { background-color: rgba(255, 99, 132, 0.6); color: #fff; }
     .highlight-high { background-color: rgba(54, 162, 235, 0.6); color: #fff; }
-    .indicator { margin-top: 10px; font-weight: bold; color: red; }
+    .indicator { margin-top: 10px; font-weight: normal; color: rgb(247, 93, 93); }
 
     #averageChart, #diffChart { display: none; width: 100%; max-width: 400px; margin-top: 20px; }
+
   </style>
 </head>
 <body class="bg-light">
@@ -45,8 +46,8 @@
 
     <div class="row mt-4">
       <div class="col-md-4">
-        <input id="username" class="form-control mb-2" placeholder="Your Name">
-        <input id="taskId" class="form-control mb-2" placeholder="Task ID">
+        <input id="username" type="text" class="form-control mb-2" placeholder="Your Name">
+        <input id="taskId" type="number" class="form-control mb-2" placeholder="Task ID">
         <input id="taskDescription" class="form-control mb-2" placeholder="Task Description">
         <div class="d-grid gap-2">
           <button onclick="startTask()" id="startTaskButton" class="btn btn-primary">Start Task</button>
@@ -54,7 +55,7 @@
         </div>
         
         <div id="shareLink" class="mt-2 text-muted d-flex align-items-center">
-          <span id="sharedLinkText">Share this link: </span>
+          <span id="sharedLinkText"></span>
           <button onclick="copyLink()" class="btn btn-outline-secondary btn-sm ms-2" title="Copy link">
             <i class="bi bi-clipboard"></i>
           </button>
@@ -78,6 +79,8 @@
             <button onclick="castVote(8)" class="btn btn-outline-primary">8</button>
             <button onclick="castVote(13)" class="btn btn-outline-primary">13</button>
             <button onclick="castVote(21)" class="btn btn-outline-primary">21</button>
+            <button onclick="castVote(34)" class="btn btn-outline-primary">34</button>
+            <button onclick="castVote(55)" class="btn btn-outline-primary">55</button>
           </div>
         </div>
 
@@ -88,6 +91,9 @@
 
         <div id="results" class="row"></div>
         <div class="user-list" id="userList"></div>
+
+        <canvas id="voteLineChart"></canvas>
+
         <div id="indicator" class="indicator"></div>
       </div>
     </div>
@@ -103,6 +109,7 @@
 
     let averageChartInstance = null;
     let diffChartInstance = null;
+    let voteLineChart = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     const taskIdFromURL = urlParams.get('taskId');
@@ -111,6 +118,7 @@
       document.getElementById('taskId').disabled = true;
       document.getElementById('taskDescription').style.display = 'none';
       document.getElementById('startTaskButton').style.display = 'none';
+      document.getElementById('shareLink').style.display = 'none';
     }
 
     socket.on('taskError', (message) => {
@@ -161,6 +169,41 @@
         voteDiv.innerText = `${user}: ${vote}`;
         resultsDiv.appendChild(voteDiv);
       }
+    }
+
+    function updateVoteLineChart(votes) {
+      const users = Object.keys(votes);
+      const voteValues = users.map(user => votes[user]);
+      
+      if (voteLineChart) voteLineChart.destroy(); // Destroy previous chart instance
+      
+
+      document.getElementById('voteLineChart').style.display = 'block';
+
+
+      const ctx = document.getElementById('voteLineChart').getContext('2d');
+      voteLineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: users, // Usernames as labels
+          datasets: [{
+            label: 'Votes',
+            data: voteValues, // Current votes of each user
+            fill: false,
+            borderColor: '#add8e6',
+            borderWidth: 1,
+            tension: 0.1
+          }]
+        },
+        options: {
+          scales: { 
+            y: { 
+              beginAtZero: true,
+              ticks: { stepSize: 1 }
+            }
+          }
+        }
+      });
     }
 
     // New function to display the difference chart
@@ -293,8 +336,14 @@
         diffChartInstance.destroy();
         diffChartInstance = null;
       }
+      if (voteLineChart) {
+        voteLineChart.destroy();
+        voteLineChart = null;
+      }
+      
       document.getElementById('averageChart').style.display = 'none';
       document.getElementById('diffChart').style.display = 'none';
+      document.getElementById('voteLineChart').style.display = 'none';
     }
 
     function displayVotes(votes, reveal) {
@@ -308,6 +357,10 @@
         voteCard.textContent = user + '-' + (reveal ? vote : '?');
         card.appendChild(voteCard);
         resultsDiv.appendChild(card);
+      }
+
+      if (reveal) {
+        updateVoteLineChart(votes);
       }
     }
 
