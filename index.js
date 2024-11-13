@@ -29,7 +29,7 @@ io.on('connection', (socket) => {
     socket.emit('isHost', true);
 
     // Emit share link to host
-    const shareLink = `https://https://os-planning-poker.onrender.com?taskId=${taskId}`;
+    const shareLink = `https://os-planning-poker.onrender.com?taskId=${taskId}`;
     socket.emit('shareLink', shareLink);
   });
 
