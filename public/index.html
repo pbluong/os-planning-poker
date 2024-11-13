@@ -7,21 +7,36 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css" rel="stylesheet">
+
   <style>
-    .card { 
-      display: inline-block; 
-      padding: 20px; 
-      margin: 5px; 
-      border: 1px solid #ccc; 
-      font-size: 20px; 
-      width: 50px; 
-      text-align: center; 
+
+    input[type="text"] {
+      text-transform: uppercase;
+    }
+
+    .card {
+      display: inline-block;
+      padding: 10px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      min-width: 80px; /* Ensures cards have enough space for shorter names */
+      text-align: center;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
     .user-list { margin-top: 10px; }
     .status-icon { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 3px; }
     .voted { background-color: green; }
     .not-voted { background-color: gray; }
-    #averageChart { display: none; width: 100%; max-width: 400px; margin-top: 20px; }
+
+    .highlight-low { background-color: rgba(255, 99, 132, 0.6); color: #fff; }
+    .highlight-high { background-color: rgba(54, 162, 235, 0.6); color: #fff; }
+    .indicator { margin-top: 10px; font-weight: bold; color: red; }
+
+    #averageChart, #diffChart { display: none; width: 100%; max-width: 400px; margin-top: 20px; }
   </style>
 </head>
 <body class="bg-light">
@@ -37,7 +52,17 @@
           <button onclick="startTask()" id="startTaskButton" class="btn btn-primary">Start Task</button>
           <button onclick="joinTask()" class="btn btn-secondary">Join Task</button>
         </div>
-        <div id="shareLink" class="mt-2 text-muted"></div>
+        
+        <div id="shareLink" class="mt-2 text-muted d-flex align-items-center">
+          <span id="sharedLinkText">Share this link: </span>
+          <button onclick="copyLink()" class="btn btn-outline-secondary btn-sm ms-2" title="Copy link">
+            <i class="bi bi-clipboard"></i>
+          </button>
+        </div>
+
+        <canvas id="averageChart" class="mt-4"></canvas>
+        <canvas id="diffChart" class="mt-4"></canvas>
+
       </div>
 
       <div class="col-md-8">
@@ -61,19 +86,23 @@
           <button onclick="resetVotes()" class="btn btn-danger">Reset Votes</button>
         </div>
 
-        <div id="results" class="mt-4"></div>
+        <div id="results" class="row"></div>
         <div class="user-list" id="userList"></div>
+        <div id="indicator" class="indicator"></div>
       </div>
     </div>
 
-    <canvas id="averageChart" class="mt-4"></canvas>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const socket = io();
     let isHost = false;
+    const threshold = 5; // Define your threshold here
     let currentTaskId = null;
+
+    let averageChartInstance = null;
+    let diffChartInstance = null;
 
     const urlParams = new URLSearchParams(window.location.search);
     const taskIdFromURL = urlParams.get('taskId');
@@ -88,10 +117,94 @@
       alert(message);
     });
 
+    function copyLink() {
+      const linkText = document.getElementById('sharedLinkText').textContent.replace('Share this link: ', '');
+      navigator.clipboard.writeText(linkText)
+        .then(() => alert("Link copied to clipboard!"))
+        .catch((err) => alert("Failed to copy link."));
+    }
+
+    function calculateDifference(votes) {
+      const voteValues = Object.values(votes);
+      const minVote = Math.min(...voteValues);
+      const maxVote = Math.max(...voteValues);
+      const diff = maxVote - minVote;
+
+      const indicatorDiv = document.getElementById('indicator');
+      if (diff > threshold) {
+        indicatorDiv.innerText = `Difference between highest and lowest votes is ${diff}, which exceeds the threshold (${threshold}). Please vote again.`;
+      } else {
+        indicatorDiv.innerText = 'All team members are on a same place'; // Clear indicator if within threshold
+      }
+
+      displayDiffChart(minVote, maxVote);
+
+      highlightVotes(votes, minVote, maxVote);
+
+    }
+
+
+    function highlightVotes(votes, minVote, maxVote) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+
+      for (const [user, vote] of Object.entries(votes)) {
+        const voteDiv = document.createElement('div');
+        voteDiv.className = 'card';
+
+        if (vote === minVote) {
+          voteDiv.classList.add('highlight-low');
+        } else if (vote === maxVote) {
+          voteDiv.classList.add('highlight-high');
+        }
+
+        voteDiv.innerText = `${user}: ${vote}`;
+        resultsDiv.appendChild(voteDiv);
+      }
+    }
+
+    // New function to display the difference chart
+    function displayDiffChart(minVote, maxVote) {
+      const ctx = document.getElementById('diffChart').getContext('2d');
+      document.getElementById('diffChart').style.display = 'block';
+
+      if (diffChartInstance) diffChartInstance.destroy();
+
+    diffChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Lowest Vote', 'Highest Vote'],
+          datasets: [{
+            label: 'Vote Difference',
+            data: [minVote, maxVote],
+            backgroundColor: ['rgba(255, 99, 132, 0.6)', 'rgba(54, 162, 235, 0.6)'],
+            borderColor: ['rgba(255, 99, 132, 1)', 'rgba(54, 162, 235, 1)'],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
     function startTask() {
       const user = document.getElementById('username').value;
       const taskId = document.getElementById('taskId').value;
       const taskDescription = document.getElementById('taskDescription').value;
+
+      // Validate that the username is not empty
+      if (!user) {
+        alert("Username is required!");
+        return;
+      }
+      if (!taskId) {
+        alert("Task ID is required!");
+        return;
+      }
+
       currentTaskId = taskId;
       socket.emit('startTask', { taskId, taskDescription, user });
 
@@ -101,7 +214,7 @@
       });
 
       socket.on('shareLink', (link) => {
-        document.getElementById('shareLink').innerText = `Share this link: ${link}`;
+        document.getElementById('sharedLinkText').textContent = `Share this link: ${link}`;
       });
 
       socket.on('taskInfo', ({ taskId, taskDescription, users }) => {
@@ -113,7 +226,7 @@
       socket.on('votesUpdate', (votes, reveal, averageVote) => {
         displayVotes(votes, reveal);
         if (reveal && averageVote !== undefined) {
-          showAverageChart(averageVote);
+          showAverageChart(averageVote, votes);
         }
       });
     }
@@ -121,6 +234,13 @@
     function joinTask() {
       const user = document.getElementById('username').value;
       const taskId = document.getElementById('taskId').value || taskIdFromURL;
+
+      // Validate that the username is not empty
+      if (!user) {
+        alert("Username is required!");
+        return;
+      }
+
       currentTaskId = taskId;
       socket.emit('joinTask', { taskId, user });
 
@@ -138,7 +258,11 @@
       socket.on('votesUpdate', (votes, reveal, averageVote) => {
         displayVotes(votes, reveal);
         if (reveal && averageVote !== undefined) {
-          showAverageChart(averageVote);
+          showAverageChart(averageVote, votes);
+        } else {
+          resetCharts();
+        document.getElementById('results').innerHTML = '';
+        document.getElementById('indicator').innerText = '';
         }
       });
     }
@@ -154,6 +278,23 @@
 
     function resetVotes() {
       socket.emit('resetVotes', currentTaskId);
+
+      resetCharts();
+      document.getElementById('results').innerHTML = '';
+      document.getElementById('indicator').innerText = '';
+    }
+
+    function resetCharts() {
+      if (averageChartInstance) {
+        averageChartInstance.destroy();
+        averageChartInstance = null;
+      }
+      if (diffChartInstance) {
+        diffChartInstance.destroy();
+        diffChartInstance = null;
+      }
+      document.getElementById('averageChart').style.display = 'none';
+      document.getElementById('diffChart').style.display = 'none';
     }
 
     function displayVotes(votes, reveal) {
@@ -161,8 +302,11 @@
       resultsDiv.innerHTML = '';
       for (const [user, vote] of Object.entries(votes)) {
         const card = document.createElement('div');
-        card.className = 'card border';
-        card.textContent = user + '-' + (reveal ? vote : '?');
+        card.className = 'col-md-3 col-sm-4 col-xs-6'; // Bootstrap grid for responsiveness
+        const voteCard = document.createElement('div');
+        voteCard.className = 'card';
+        voteCard.textContent = user + '-' + (reveal ? vote : '?');
+        card.appendChild(voteCard);
         resultsDiv.appendChild(card);
       }
     }
@@ -177,19 +321,23 @@
       for (const [user, { voted }] of Object.entries(users)) {
         const userItem = document.createElement('div');
         userItem.className = 'user-item';
-        const statusIcon = document.createElement('span');
-        statusIcon.className = `status-icon ${voted ? 'voted' : 'not-voted'}`;
+        const statusIcon = document.createElement('div');
+        statusIcon.className = 'status-icon ' + (voted ? 'voted' : 'not-voted');
+        const userName = document.createElement('span');
+        userName.textContent = user;
         userItem.appendChild(statusIcon);
-        userItem.appendChild(document.createTextNode(user));
+        userItem.appendChild(userName);
         userList.appendChild(userItem);
       }
     }
 
-    function showAverageChart(averageVote) {
+    function showAverageChart(averageVote, votes) {
       const ctx = document.getElementById('averageChart').getContext('2d');
       document.getElementById('averageChart').style.display = 'block';
 
-      new Chart(ctx, {
+      if (averageChartInstance) averageChartInstance.destroy();
+
+    averageChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: ['Average Points'],
@@ -209,6 +357,8 @@
           }
         }
       });
+
+      calculateDifference(votes);
     }
   </script>
 </body>
