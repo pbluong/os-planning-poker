@@ -1,0 +1,154 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Planning Poker</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    .card { display: inline-block; padding: 20px; margin: 5px; border: 1px solid #ccc; font-size: 20px; width: 50px; text-align: center; }
+    .user-list { margin-top: 10px; }
+    .user-item { display: flex; align-items: center; }
+    .user-item span { margin-left: 5px; }
+    .status-icon { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    .voted { background-color: green; }
+    .not-voted { background-color: gray; }
+  </style>
+</head>
+<body>
+  <h1>Planning Poker</h1>
+
+  <input id="username" placeholder="Your Name">
+  <input id="taskId" placeholder="Task ID">
+  <input id="taskDescription" placeholder="Task Description">
+  <button onclick="startTask()" id="startTaskButton">Start Task</button>
+  <button onclick="joinTask()">Join Task</button>
+
+  <div id="shareLink" style="margin-top: 10px;"></div>
+  <div id="taskDetails"></div>
+
+  <div id="voting" style="display: none;">
+    <button onclick="castVote(1)">1</button>
+    <button onclick="castVote(2)">2</button>
+    <button onclick="castVote(3)">3</button>
+    <button onclick="castVote(5)">5</button>
+    <button onclick="castVote(8)">8</button>
+    <button onclick="castVote(13)">13</button>
+  </div>
+
+  <div id="hostControls" style="display: none;">
+    <button onclick="revealVotes()">Reveal Votes</button>
+    <button onclick="resetVotes()">Reset Votes</button>
+  </div>
+
+  <div id="results"></div>
+  <div class="user-list" id="userList"></div>
+
+  <script>
+    const socket = io();
+    let isHost = false;
+    let currentTaskId = null;
+
+    // Parse URL parameters for taskId
+    const urlParams = new URLSearchParams(window.location.search);
+    const taskIdFromURL = urlParams.get('taskId');
+    if (taskIdFromURL) {
+      document.getElementById('taskId').value = taskIdFromURL;
+      document.getElementById('taskId').disabled = true;
+      document.getElementById('taskDescription').style.display = 'none';
+      document.getElementById('startTaskButton').style.display = 'none';
+    }
+
+    socket.on('taskError', (message) => {
+      alert(message);
+    });
+
+    function startTask() {
+      const user = document.getElementById('username').value;
+      const taskId = document.getElementById('taskId').value;
+      const taskDescription = document.getElementById('taskDescription').value;
+      currentTaskId = taskId;
+      socket.emit('startTask', { taskId, taskDescription, user });
+
+      socket.on('isHost', (hostStatus) => {
+        isHost = hostStatus;
+        document.getElementById('hostControls').style.display = isHost ? 'block' : 'none';
+      });
+
+      socket.on('shareLink', (link) => {
+        document.getElementById('shareLink').innerText = `Share this link: ${link}`;
+      });
+
+      socket.on('taskInfo', ({ taskId, taskDescription, users }) => {
+        displayTaskDetails(taskId, taskDescription);
+        updateUserList(users);
+        document.getElementById('voting').style.display = 'block';
+      });
+    }
+
+    function joinTask() {
+      const user = document.getElementById('username').value;
+      const taskId = document.getElementById('taskId').value || taskIdFromURL;
+      currentTaskId = taskId;
+      socket.emit('joinTask', { taskId, user });
+
+      socket.on('isHost', (hostStatus) => {
+        isHost = hostStatus;
+        document.getElementById('hostControls').style.display = isHost ? 'block' : 'none';
+      });
+
+      socket.on('taskInfo', ({ taskId, taskDescription, users }) => {
+        displayTaskDetails(taskId, taskDescription);
+        updateUserList(users);
+        document.getElementById('voting').style.display = 'block'; // Show voting cards immediately
+      });
+
+      socket.on('votesUpdate', (votes, reveal) => {
+        displayVotes(votes, reveal);
+      });
+    }
+
+    function castVote(vote) {
+      const user = document.getElementById('username').value;
+      socket.emit('castVote', { taskId: currentTaskId, user, vote });
+    }
+
+    function revealVotes() {
+      socket.emit('revealVotes', currentTaskId);
+    }
+
+    function resetVotes() {
+      socket.emit('resetVotes', currentTaskId);
+    }
+
+    function displayVotes(votes, reveal) {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+      for (const [user, vote] of Object.entries(votes)) {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.textContent = reveal ? vote : '?';
+        resultsDiv.appendChild(card);
+      }
+    }
+
+    function displayTaskDetails(taskId, taskDescription) {
+      document.getElementById('taskDetails').innerText = `Task: ${taskId} - ${taskDescription}`;
+    }
+
+    function updateUserList(users) {
+      const userList = document.getElementById('userList');
+      userList.innerHTML = '';
+      for (const [user, { voted }] of Object.entries(users)) {
+        const userItem = document.createElement('div');
+        userItem.className = 'user-item';
+        const statusIcon = document.createElement('span');
+        statusIcon.className = `status-icon ${voted ? 'voted' : 'not-voted'}`;
+        userItem.appendChild(statusIcon);
+        userItem.appendChild(document.createTextNode(user));
+        userList.appendChild(userItem);
+      }
+    }
+  </script>
+</body>
+</html>
