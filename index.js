@@ -55,6 +55,7 @@ io.on('connection', (socket) => {
   
     // Notify all clients in the session about the updated user list
     io.to(taskId).emit('userListUpdate', sessions[taskId].users);
+
     io.to(taskId).emit('votesUpdate', sessions[taskId].votes, false);
   });
 
@@ -74,7 +75,15 @@ io.on('connection', (socket) => {
 
   socket.on('revealVotes', (taskId) => {
     if (sessions[taskId]) {
-      io.to(taskId).emit('votesUpdate', sessions[taskId].votes, true);
+      // Get all votes for the task session
+      const votes = sessions[taskId].votes;
+      
+      // Calculate the average vote
+      const totalVotes = Object.values(votes).reduce((acc, vote) => acc + vote, 0);
+      const averageVote = totalVotes / Object.keys(votes).length;
+  
+      // Emit the votes and average vote to all users (including the host)
+      io.to(taskId).emit('votesUpdate', votes, true, averageVote);
     }
   });
 
