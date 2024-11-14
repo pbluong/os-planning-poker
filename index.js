@@ -11,6 +11,17 @@ let sessions = {};
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/getTaskInfo', (req, res) => {
+  const taskId = req.query.taskId;
+  // Find task details based on taskId (example only, use your actual data source)
+  const task = sessions[taskId];
+  if (task) {
+    res.json({ taskId: task.taskId, taskDescription: task.taskDescription });
+  } else {
+    res.status(404).json({ message: 'Task not found' });
+  }
+});
+
 io.on('connection', (socket) => {
   console.log('A user connected');
 
@@ -21,7 +32,7 @@ io.on('connection', (socket) => {
         taskDescription,
         host: user,
         votes: {},
-        users: { [user]: { voted: false } }
+        users: { [user]: { voted: false, point: 0 } }
       };
     }
     socket.join(taskId);
@@ -29,7 +40,7 @@ io.on('connection', (socket) => {
     socket.emit('isHost', true);
 
     // Emit share link to host
-    const shareLink = `https://os-planning-poker.onrender.com?taskId=${taskId}`;
+    const shareLink = `http://localhost:3000?taskId=${taskId}`;
     socket.emit('shareLink', shareLink);
   });
 
@@ -42,7 +53,7 @@ io.on('connection', (socket) => {
   
     // Add the user to the session if not already added
     if (!sessions[taskId].users[user]) {
-      sessions[taskId].users[user] = { voted: false };
+      sessions[taskId].users[user] = { voted: false, point: 0 };
     }
     socket.join(taskId);
   
@@ -56,19 +67,20 @@ io.on('connection', (socket) => {
     // Notify all clients in the session about the updated user list
     io.to(taskId).emit('userListUpdate', sessions[taskId].users);
 
-    io.to(taskId).emit('votesUpdate', sessions[taskId].votes, false);
+    io.to(taskId).emit('votesUpdate', sessions[taskId].users, false);
   });
 
   // Handle vote casting, reveal, and reset as previously described
   socket.on('castVote', ({ taskId, user, vote }) => {
     if (sessions[taskId]) {
       if (!sessions[taskId].users[user]) {
-        sessions[taskId].users[user] = { voted: false };
+        sessions[taskId].users[user] = { voted: false, point: 0 };
       }
       sessions[taskId].votes[user] = vote;
       sessions[taskId].users[user].voted = true;
+      sessions[taskId].users[user].point = vote;
 
-      io.to(taskId).emit('votesUpdate', sessions[taskId].votes, false);
+      io.to(taskId).emit('votesUpdate', sessions[taskId].users, false);
       io.to(taskId).emit('taskInfo', { taskId, taskDescription: sessions[taskId].taskDescription, users: sessions[taskId].users });
     }
   });
@@ -83,7 +95,7 @@ io.on('connection', (socket) => {
       const averageVote = totalVotes / Object.keys(votes).length;
   
       // Emit the votes and average vote to all users (including the host)
-      io.to(taskId).emit('votesUpdate', votes, true, averageVote);
+      io.to(taskId).emit('votesUpdate', sessions[taskId].users, true, averageVote);
     }
   });
 
@@ -92,13 +104,14 @@ io.on('connection', (socket) => {
       sessions[taskId].votes = {};
       for (let user in sessions[taskId].users) {
         sessions[taskId].users[user].voted = false;
+        sessions[taskId].users[user].point = 0;
       }
-      io.to(taskId).emit('votesUpdate', sessions[taskId].votes, false);
+      io.to(taskId).emit('votesUpdate', sessions[taskId].users, false);
       io.to(taskId).emit('taskInfo', { taskId, taskDescription: sessions[taskId].taskDescription, users: sessions[taskId].users });
     }
   });
 });
 
-server.listen(443, () => {
+server.listen(3000, () => {
   console.log('Listening on http://localhost:3000');
 });
