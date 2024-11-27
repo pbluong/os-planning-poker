@@ -12,6 +12,10 @@
 
   <style>
 
+    #userList, #results {
+      display: none;
+    }
+
     input[type="text"] {
       text-transform: uppercase;
     }
@@ -573,7 +577,8 @@
       const userAvatarsContainer = document.getElementById('userAvatars');
       userAvatarsContainer.innerHTML = ''; // Clear existing avatars
 
-      for (const [user, { voted }, point] of Object.entries(users)) {
+      for (const userKey in users) {
+        const user = users[userKey];
         const userDiv = document.createElement('div');
         userDiv.className = 'user-avatar';
 
@@ -581,19 +586,24 @@
         avatarCircle.className = 'avatar-circle';
 
         // Display vote inside the avatar
-        avatarCircle.innerText = reveal ? point : '?';
+        avatarCircle.innerText = reveal ? user.point : '?';
+
+        console.log(user);
+        console.log(user.voted);
+        console.log(user.point);
+        console.log(users);
 
         // Status icon
         const statusIcon = document.createElement('div');
         statusIcon.className = 'status-icon';
-        statusIcon.style.backgroundColor = voted ? 'green' : 'gray';
+        statusIcon.style.backgroundColor = user.voted ? 'green' : 'gray';
 
         avatarCircle.appendChild(statusIcon);
 
         // User name below the avatar
         const username = document.createElement('div');
         username.className = 'username';
-        username.innerText = user;
+        username.innerText = userKey;
 
         userDiv.appendChild(avatarCircle);
         userDiv.appendChild(username);
