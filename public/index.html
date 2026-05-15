@@ -8,21 +8,14 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
   <style>
+    #userList, #results { display: none; }
 
-    #userList, #results {
-      display: none;
-    }
+    input[type="text"] { text-transform: uppercase; }
 
-    input[type="text"] {
-      text-transform: uppercase;
-    }
-
-    #hostControls {
-      padding: 30px;
-    }
+    #hostControls { padding: 30px; }
 
     .selected-vote {
       background-color: #4c93df;
@@ -36,7 +29,7 @@
       margin: 5px;
       border: 1px solid #ccc;
       font-size: 16px;
-      min-width: 80px; /* Ensures cards have enough space for shorter names */
+      min-width: 80px;
       text-align: center;
       border-radius: 5px;
       background-color: #f9f9f9;
@@ -44,105 +37,252 @@
     }
 
     .user-list { margin-top: 10px; }
-
     .status-icon { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 3px; }
-
     .voted { background-color: green; }
-
-    .not-voted { background-color: gray; }
-
+    .not-voted { background-color: rgb(177, 8, 8); }
     .highlight-low { background-color: rgba(255, 99, 132, 0.6); color: #fff; }
-
     .highlight-high { background-color: rgba(54, 162, 235, 0.6); color: #fff; }
-
     .indicator { margin-top: 10px; font-weight: normal; color: rgb(247, 93, 93); }
-
     #averageChart, #diffChart { display: none; width: 100%; max-width: 400px; margin-top: 20px; }
-
-
     #voteLineChart {
-        height: 200px;
+      display: none;
+      width: 100%;
+      max-height: 220px;
+      margin-top: 20px;
     }
 
     .logo-img {
-      width: 50px; /* Adjust the width as needed */
-      height: auto; /* Maintains aspect ratio */
+      width: 50px !important;
+      max-width: 50px !important;
+      height: auto !important;
+      flex: 0 0 auto;
+      object-fit: contain;
+      height: 50px !important;
     }
 
+    .app-header {
+      gap: 12px;
+      text-align: center;
+      flex-wrap: wrap;
+    }
+
+    .app-title {
+      margin: 0;
+      font-size: clamp(1.4rem, 3vw, 2.2rem);
+      line-height: 1.2;
+    }
 
     .user-avatar-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-  }
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
 
-  .user-avatar {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 70px;
-    text-align: center;
-  }
+    .user-avatar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 70px;
+      text-align: center;
+    }
 
-  .avatar-circle {
-    position: relative;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: #e0e0e0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    color: #333;
-    border: 2px solid #ddd;
-       font-weight: bold;
-  }
+    .avatar-circle {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #333;
+      border: 2px solid #ddd;
+      font-weight: bold;
+    }
 
-  .status-icon {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: green; /* Change color based on status */
-    border: 2px solid #fff;
-  }
+    .status-icon {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: green;
+      border: 2px solid #fff;
+    }
 
-  .username {
-    margin-top: 5px;
-    font-size: 12px;
-    color: #333;
-    font-weight: bold;
-  }
+    .username {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #333;
+      font-weight: bold;
+    }
 
+    .domain-checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
 
+    .domain-card {
+      position: relative;
+      min-height: 150px;
+      border: 1px solid #d9e2ec;
+      border-radius: 14px;
+      background: #fff;
+      padding: 18px 18px 16px 18px;
+      cursor: pointer;
+      transition: all 0.18s ease-in-out;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+
+    .domain-card:hover {
+      border-color: #86b7fe;
+      box-shadow: 0 6px 18px rgba(13, 110, 253, 0.10);
+      transform: translateY(-1px);
+    }
+
+    .domain-card.selected {
+      border-color: #0d6efd;
+      background: #f5f9ff;
+      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
+    }
+
+    .domain-card .form-check-input {
+      margin: 8px 0 0 0;
+      flex: 0 0 auto;
+      width: 1.15rem;
+      height: 1.15rem;
+    }
+
+    .domain-card-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .domain-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 1rem;
+      line-height: 1.35;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+
+    .domain-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      background: #eef5ff;
+      color: #0d6efd;
+    }
+
+    .domain-card.selected .domain-icon {
+      background: #0d6efd;
+      color: #fff;
+    }
+
+    .domain-description {
+      color: #5f6c7b;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      margin-left: 42px;
+    }
+
+    .domain-selected-pill {
+      display: none;
+      margin-left: 42px;
+      margin-top: 8px;
+      font-size: 0.75rem;
+    }
+
+    .domain-card.selected .domain-selected-pill {
+      display: inline-block;
+    }
+
+    .estimation-panel {
+      border: 1px solid #d9e2ec;
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 16px;
+      margin-top: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .domain-section {
+      border-left: 5px solid #0d6efd;
+      padding-left: 12px;
+      margin-bottom: 22px;
+    }
+
+    .criteria-help {
+      color: #6c757d;
+      font-size: 0.85rem;
+    }
+
+    .score-input {
+      max-width: 90px;
+    }
+
+    .summary-box {
+      position: sticky;
+      top: 10px;
+      border-radius: 12px;
+      border: 1px solid #e3e3e3;
+      background: #f8f9fa;
+      padding: 16px;
+    }
+
+    .story-point-badge {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .split-warning {
+      display: none;
+    }
+
+    .booster-checkbox-list {
+      columns: 2;
+    }
+
+    @media (max-width: 768px) {
+      .booster-checkbox-list { columns: 1; }
+      .summary-box { position: static; }
+    }
   </style>
 </head>
 <body class="bg-light">
   <div class="container mt-5">
 
-    <div class="d-flex align-items-center justify-content-center mt-5">
-      <img src="/logo.png" alt="Logo" class="logo-img me-2">
-      <h1>Planning Poker - SALES PORTALS</h1>
-      <img src="/logo.png" alt="Logo" class="logo-img me-2">
+    <div class="app-header d-flex align-items-center justify-content-center mt-5">
+      <img src="/logo.png" alt="Logo" class="logo-img" width="50">
+      <h1 class="app-title">Planning Poker - SALES PORTALS</h1>
+      <img src="/logo.png" alt="Logo" class="logo-img" width="50">
     </div>
-    
 
     <div class="row mt-4">
       <div class="col-md-4">
         <input id="username" type="text" maxlength="4" class="form-control mb-2" placeholder="Your Name">
         <input id="taskId" type="number" class="form-control mb-2" placeholder="Task ID">
-        <input id="taskDescription" maxlength="20" class="form-control mb-2" placeholder="Task Description">
+        <input id="taskDescription" maxlength="80" class="form-control mb-2" placeholder="STIX-XXX or Task Description">
         <div class="d-grid gap-2">
           <button onclick="startTask()" id="startTaskButton" class="btn btn-primary">Start a Task</button>
           <button onclick="showJoinForm()" id="joinTaskButtonSecondary" class="btn btn-secondary" style="display: none;">Join a Task</button>
           <button onclick="joinTask()" id="joinTaskButton" class="btn btn-primary" style="display: none;">Join</button>
           <button onclick="goBack()" id="goBackButton" class="btn btn-secondary" style="display: none;">Go Back</button>
         </div>
-        
+
         <div id="shareLink" class="mt-2 text-muted d-flex align-items-center">
           <span id="sharedLinkText"></span>
           <button onclick="copyLink()" class="btn btn-outline-secondary btn-sm ms-2" title="Copy link">
@@ -150,16 +290,36 @@
           </button>
         </div>
 
+        <div class="summary-box mt-4" id="estimationSummaryBox">
+          <h5><i class="bi bi-calculator"></i> Estimation Calculator</h5>
+          <div class="small text-muted mb-2">Select domains, fill criteria, then use the suggested story point for voting.</div>
+          <div>Base Technical Score: <strong id="baseScore">0</strong></div>
+          <div>Booster Score: <strong id="boosterScore">0</strong></div>
+          <div>Final Score: <strong id="finalScore">0</strong></div>
+          <hr>
+          <div>Suggested Story Point:</div>
+          <div class="story-point-badge text-primary" id="suggestedStoryPoint">-</div>
+          <div class="text-muted" id="storyPointMeaning">Select criteria to calculate</div>
+          <div class="alert alert-warning mt-3 split-warning" id="splitWarning">
+            <strong>Recommendation:</strong> score is too high. Split the story before estimation.
+          </div>
+          <button class="btn btn-outline-primary btn-sm mt-2" onclick="voteSuggestedPoint()">
+            Vote Suggested Point
+          </button>
+          <button class="btn btn-outline-secondary btn-sm mt-2" onclick="resetEstimationForm()">
+            Reset Calculator
+          </button>
+        </div>
+
         <canvas id="averageChart" class="mt-4"></canvas>
         <canvas id="diffChart" class="mt-4"></canvas>
-
       </div>
 
       <div class="col-md-8">
-        <div id="taskDetails" class="alert alert-info"></div>
+        <div id="taskDetails" class="alert alert-info">Please start or join a task...</div>
 
         <div id="voting" class="mt-3 text-center" style="display: none;">
-          <div class="btn-group" role="group">
+          <div class="btn-group flex-wrap" role="group">
             <button onclick="castVote(0)" class="btn btn-outline-primary" value="0">0</button>
             <button onclick="castVote(1)" class="btn btn-outline-primary" value="1">1</button>
             <button onclick="castVote(2)" class="btn btn-outline-primary" value="2">2</button>
@@ -173,9 +333,7 @@
           </div>
         </div>
 
-      
-
-        <div id="hostControls"  class="col-md-6 text-right" style="display: none;">
+        <div id="hostControls" class="col-md-12 text-right" style="display: none;">
           <div class="d-flex justify-content-between">
             <button onclick="revealVotes()" class="btn btn-warning">Reveal Votes</button>
             <button onclick="resetVotes()" class="btn btn-danger">Reset Votes</button>
@@ -184,32 +342,328 @@
 
         <div id="results" class="row"></div>
         <div class="user-list" id="userList"></div>
-
-        <div id="userAvatars" class="user-avatar-container">
-          <!-- Individual avatars will be added here dynamically -->
-        </div>
-
-        <div id="indicator" class="alert alert-success" role="alert">
-        </div>
-
+        <div id="userAvatars" class="user-avatar-container"></div>
+        <div id="indicator" class="alert alert-success" role="alert" style="display: none;"></div>
         <canvas id="voteLineChart"></canvas>
 
-        
+        <div class="estimation-panel">
+          <h4><i class="bi bi-grid-3x3-gap"></i> Story Point Estimation Assistant</h4>
+          <p class="text-muted mb-3">
+            Choose one or more technical domains related to the story. The page generates the relevant scoring grid automatically.
+          </p>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold">Technical Domains</label>
+            <div id="technicalDomains" class="domain-checkbox-grid"></div>
+          </div>
+
+          <div id="criteriaContainer"></div>
+
+          <div id="featureRiskContainer" class="mt-4">
+            <h5><i class="bi bi-exclamation-triangle"></i> Historical Feature Risk Boosters</h5>
+            <div class="text-muted small mb-2">
+              Select only if the story directly impacts this feature or increases regression/testing risk.
+            </div>
+            <div id="featureRiskList" class="booster-checkbox-list"></div>
+          </div>
+
+          <div class="mt-4">
+            <h5><i class="bi bi-lightning-charge"></i> Context Boosters</h5>
+            <div class="text-muted small mb-2">
+              Select only if the context adds real extra risk beyond the domain scoring.
+            </div>
+            <div id="contextBoosterList" class="booster-checkbox-list"></div>
+          </div>
+        </div>
+
       </div>
     </div>
-
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     const socket = io();
     let isHost = false;
-    const threshold = 5; // Define your threshold here
+    const threshold = 5;
     let currentTaskId = null;
-
     let averageChartInstance = null;
     let diffChartInstance = null;
     let voteLineChart = null;
+    let currentSuggestedStoryPoint = null;
+
+    const estimationModel = {
+      domains: {
+        legacyUi: {
+          label: 'Legacy UI/UX (JSP / jQuery / CSS)',
+          icon: 'bi-palette',
+          description: 'Manual accessibility work, responsive/mobile behavior, browser compatibility, UI regressions.',
+          criteria: [
+            { key: 'legacy-ui-complexity', label: 'UI Complexity', min: 1, max: 3, help: '1=simple layout/text, 2=interactive UI, 3=complex flow or multiple states' },
+            { key: 'legacy-accessibility', label: 'Accessibility Impact (ADA/WCAG)', min: 0, max: 3, help: '0=no impact, 1=minor, 2=manual ARIA/focus/keyboard, 3=high compliance risk' },
+            { key: 'legacy-mobile', label: 'Responsive/Mobile Complexity', min: 0, max: 2, help: '0=no mobile impact, 1=minor responsive adjustment, 2=mobile-first flow/regression risk' },
+            { key: 'legacy-browser', label: 'Browser Compatibility Risk', min: 0, max: 2, help: '0=low, 1=some browser concerns, 2=high CSS/JS compatibility risk' },
+            { key: 'legacy-manual-testing', label: 'Manual Testing Effort', min: 1, max: 3, help: '1=quick check, 2=several pages/devices, 3=complex regression matrix' },
+            { key: 'legacy-cross-page', label: 'Cross-page Impact', min: 0, max: 3, help: '0=single page, 2=shared layout, 3=many pages or purchase flow' }
+          ]
+        },
+        gravityReact: {
+          label: 'Gravity Widget (React)',
+          icon: 'bi-boxes',
+          description: 'Component logic, API integration, state management, reuse and rendering/testing behavior.',
+          criteria: [
+            { key: 'gravity-component-logic', label: 'Component Logic Complexity', min: 1, max: 3, help: '1=simple component, 2=conditional behavior, 3=complex widget logic' },
+            { key: 'gravity-api', label: 'API Integration Complexity', min: 0, max: 3, help: '0=no API, 1=existing API, 2=new/changed API, 3=error/session/async complexity' },
+            { key: 'gravity-state', label: 'State Management Complexity', min: 0, max: 3, help: '0=none, 1=local state, 2=shared state, 3=complex async/cart/session state' },
+            { key: 'gravity-ux', label: 'UI/UX Behavior Complexity', min: 1, max: 3, help: '1=simple display, 2=interaction, 3=complex journey/mobile behavior' },
+            { key: 'gravity-testing', label: 'Automated Testing Impact', min: 0, max: 2, help: '0=no test impact, 1=update tests, 2=new mocks/async/integration tests' },
+            { key: 'gravity-shared-risk', label: 'Reusability / Shared Component Risk', min: 0, max: 3, help: '0=isolated, 2=shared by several POS, 3=core shared widget' }
+          ]
+        },
+        javaBackend: {
+          label: 'Java Backend (Online Sales)',
+          icon: 'bi-cup-hot',
+          description: 'Business logic, API contracts, performance, dependencies on other teams/services, concurrency/session/cache behavior.',
+          criteria: [
+            { key: 'java-business-logic', label: 'Business Logic Complexity', min: 1, max: 3, help: '1=simple validation, 2=business rule, 3=complex ticketing logic' },
+            { key: 'java-integration', label: 'Integration with Other Services', min: 0, max: 3, help: '0=none, 1=existing service, 2=contract change, 3=other team/external dependency' },
+            { key: 'java-data-cache', label: 'Data/Cache Impact', min: 0, max: 3, help: '0=none, 1=read-only/data mapping, 2=cache changes, 3=Mongo/session/cache sync risk' },
+            { key: 'java-performance', label: 'Performance Sensitivity', min: 0, max: 3, help: '0=low, 1=normal, 2=high traffic, 3=seatmap/cart/catalog/DB-heavy path' },
+            { key: 'java-error-handling', label: 'Error Handling Complexity', min: 1, max: 3, help: '1=simple errors, 2=several failure cases, 3=session/auth/transactional recovery' },
+            { key: 'java-testing', label: 'Testing Complexity', min: 1, max: 3, help: '1=unit test, 2=integration test, 3=end-to-end/cross-service regression' }
+          ]
+        },
+        awsServices: {
+          label: 'Online Sales Services (AWS / WAF / Lambda)',
+          icon: 'bi-cloud',
+          description: 'CloudFront/WAF/Lambda behavior, security risks, cache behavior, production validation, rollout complexity.',
+          criteria: [
+            { key: 'aws-architecture', label: 'AWS Architecture Complexity', min: 1, max: 3, help: '1=simple config, 2=several AWS resources, 3=edge/distributed architecture' },
+            { key: 'aws-security-bot', label: 'Security/BOT Complexity', min: 0, max: 3, help: '0=none, 1=basic rule, 2=security logic, 3=bot bypass/anti-abuse behavior' },
+            { key: 'aws-cache-cdn', label: 'Cache/CDN Impact', min: 0, max: 3, help: '0=none, 1=TTL/cache key, 2=behavior change, 3=hard-to-test cache side effects' },
+            { key: 'aws-rollout', label: 'Deployment/Rollout Complexity', min: 1, max: 3, help: '1=single env, 2=controlled rollout, 3=multi-account/many distributions' },
+            { key: 'aws-observability', label: 'Observability/Logging Complexity', min: 0, max: 2, help: '0=none, 1=logs/metrics update, 2=new monitoring/alerting needed' },
+            { key: 'aws-prod-validation', label: 'Production Validation Difficulty', min: 1, max: 3, help: '1=easy to test, 2=needs integration env, 3=production-only/edge propagation behavior' }
+          ]
+        }
+      },
+      contextBoosters: [
+        { key: 'ctx-bot', label: 'BOT protection / anti-bypass logic', score: 2 },
+        { key: 'ctx-cloudfront-cache', label: 'CloudFront / cache behavior', score: 2 },
+        { key: 'ctx-security', label: 'Security logic (WAF/auth/CSP/cookies)', score: 2 },
+        { key: 'ctx-performance', label: 'Performance-sensitive APIs', score: 2 },
+        { key: 'ctx-investigation', label: 'Investigation / debugging with unclear root cause', score: 3 },
+        { key: 'ctx-prod-only', label: 'Production-only reproducible behavior', score: 3 },
+        { key: 'ctx-new-pattern', label: 'New technical pattern', score: 3 },
+        { key: 'ctx-multi-account', label: 'Multi-account AWS rollout', score: 3 }
+      ],
+      featureRiskBoosters: [
+        { key: 'risk-cross-selling', label: 'Cross-selling', score: 2, why: 'Complex business combinations / regressions' },
+        { key: 'risk-advantages', label: 'Advantages / Promotions', score: 2, why: 'Hidden rules & edge cases' },
+        { key: 'risk-fees', label: 'Fees & Charges', score: 2, why: 'Pricing impact / calculation bugs' },
+        { key: 'risk-options', label: 'Options / Upsell flows', score: 1, why: 'UI + backend consistency' },
+        { key: 'risk-tvm', label: 'TVM Integration', score: 3, why: 'External system dependency' },
+        { key: 'risk-seatmap', label: 'Seat Map', score: 3, why: 'Performance + cache + UX complexity' },
+        { key: 'risk-cart-checkout', label: 'Cart / Checkout', score: 3, why: 'Critical business flow' },
+        { key: 'risk-session', label: 'Session Handling', score: 2, why: 'Async/session expiration edge cases' },
+        { key: 'risk-auth', label: 'Authentication / Login', score: 2, why: 'Security + UX side effects' },
+        { key: 'risk-payment', label: 'Payment / EPC', score: 3, why: 'High business & security impact' },
+        { key: 'risk-big-files', label: 'Big Files / ZIP Customization', score: 2, why: 'Cache invalidation / deployment risks' },
+        { key: 'risk-cf-cache', label: 'CloudFront Cache Logic', score: 3, why: 'Hard to test / hidden side effects' },
+        { key: 'risk-bot', label: 'BOT Protection', score: 3, why: 'Unknown attacker behavior' },
+        { key: 'risk-accessibility', label: 'Accessibility Remediation', score: 2, why: 'Manual verification effort' },
+        { key: 'risk-mobile', label: 'Mobile Responsive UI', score: 2, why: 'Regression risk across devices' },
+        { key: 'risk-mongo', label: 'Mongo Cache / Sync', score: 3, why: 'Historical performance issues' },
+        { key: 'risk-localization', label: 'Multi-language / Localization', score: 1, why: 'Hidden UI/data regressions' }
+      ]
+    };
+
+    function initEstimationAssistant() {
+      renderTechnicalDomains();
+      renderContextBoosters();
+      renderFeatureRiskBoosters();
+      updateEstimationSummary();
+    }
+
+    function renderTechnicalDomains() {
+      const container = document.getElementById('technicalDomains');
+      container.innerHTML = '';
+
+      Object.entries(estimationModel.domains).forEach(([domainKey, domain]) => {
+
+        const card = document.createElement('label');
+        card.className = 'domain-card';
+        card.setAttribute('for', `domain-${domainKey}`);
+
+        card.innerHTML = `
+          <input class="form-check-input technical-domain-checkbox"
+                type="checkbox"
+                value="${domainKey}"
+                id="domain-${domainKey}"
+                onchange="syncDomainCardSelection(this); renderCriteriaTables(); updateEstimationSummary();">
+
+          <div class="domain-card-body">
+
+            <div class="domain-title">
+              <span class="domain-icon">
+                <i class="bi ${domain.icon}"></i>
+              </span>
+
+              <span>${domain.label}</span>
+            </div>
+
+            <div class="domain-description">
+              ${domain.description}
+            </div>
+
+            <span class="badge bg-primary domain-selected-pill">
+              Selected
+            </span>
+
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function syncDomainCardSelection(input) {
+      const card = input.closest('.domain-card');
+
+      if (card) {
+        card.classList.toggle('selected', input.checked);
+      }
+    }
+
+    function renderCriteriaTables() {
+      const container = document.getElementById('criteriaContainer');
+      container.innerHTML = '';
+      const selectedDomains = getSelectedDomains();
+
+      if (selectedDomains.length === 0) {
+        container.innerHTML = '<div class="alert alert-secondary">Select at least one technical domain to generate the scoring table.</div>';
+        updateEstimationSummary();
+        return;
+      }
+
+      selectedDomains.forEach(domainKey => {
+        const domain = estimationModel.domains[domainKey];
+        const section = document.createElement('div');
+        section.className = 'domain-section';
+        section.innerHTML = `
+          <h5><i class="bi ${domain.icon}"></i> ${domain.label}</h5>
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th style="width: 35%">Criteria</th>
+                <th style="width: 15%">Score</th>
+                <th>Guide</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${domain.criteria.map(criteria => `
+                <tr>
+                  <td class="fw-semibold">${criteria.label}</td>
+                  <td>
+                    <input type="number"
+                           class="form-control form-control-sm score-input criteria-score"
+                           id="${criteria.key}"
+                           min="${criteria.min}"
+                           max="${criteria.max}"
+                           value="${criteria.min}"
+                           onchange="normalizeScoreInput(this); updateEstimationSummary();"
+                           oninput="normalizeScoreInput(this); updateEstimationSummary();">
+                  </td>
+                  <td class="criteria-help">${criteria.help}<br><span class="badge bg-light text-dark">${criteria.min}–${criteria.max}</span></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+        container.appendChild(section);
+      });
+
+      updateEstimationSummary();
+    }
+
+    function renderContextBoosters() {
+      const container = document.getElementById('contextBoosterList');
+      container.innerHTML = estimationModel.contextBoosters.map(booster => `
+        <div class="form-check">
+          <input class="form-check-input booster-checkbox" type="checkbox" value="${booster.score}" id="${booster.key}" onchange="updateEstimationSummary();">
+          <label class="form-check-label" for="${booster.key}">${booster.label} <span class="badge bg-warning text-dark">+${booster.score}</span></label>
+        </div>
+      `).join('');
+    }
+
+    function renderFeatureRiskBoosters() {
+      const container = document.getElementById('featureRiskList');
+      container.innerHTML = estimationModel.featureRiskBoosters.map(booster => `
+        <div class="form-check" title="${booster.why}">
+          <input class="form-check-input booster-checkbox" type="checkbox" value="${booster.score}" id="${booster.key}" onchange="updateEstimationSummary();">
+          <label class="form-check-label" for="${booster.key}">${booster.label} <span class="badge bg-danger">+${booster.score}</span></label>
+        </div>
+      `).join('');
+    }
+
+    function getSelectedDomains() {
+      return Array.from(document.querySelectorAll('.technical-domain-checkbox:checked')).map(input => input.value);
+    }
+
+    function normalizeScoreInput(input) {
+      const min = Number(input.min);
+      const max = Number(input.max);
+      let value = Number(input.value);
+
+      if (Number.isNaN(value)) value = min;
+      if (value < min) value = min;
+      if (value > max) value = max;
+
+      input.value = value;
+    }
+
+    function updateEstimationSummary() {
+      const baseScore = Array.from(document.querySelectorAll('.criteria-score'))
+        .reduce((sum, input) => sum + Number(input.value || 0), 0);
+
+      const boosterScore = Array.from(document.querySelectorAll('.booster-checkbox:checked'))
+        .reduce((sum, input) => sum + Number(input.value || 0), 0);
+
+      const finalScore = baseScore + boosterScore;
+      const storyPoint = convertScoreToStoryPoint(finalScore);
+
+      currentSuggestedStoryPoint = storyPoint.point;
+
+      document.getElementById('baseScore').innerText = baseScore;
+      document.getElementById('boosterScore').innerText = boosterScore;
+      document.getElementById('finalScore').innerText = finalScore;
+      document.getElementById('suggestedStoryPoint').innerText = storyPoint.point === null ? '-' : storyPoint.point;
+      document.getElementById('storyPointMeaning').innerText = storyPoint.meaning;
+      document.getElementById('splitWarning').style.display = storyPoint.shouldSplit ? 'block' : 'none';
+    }
+
+    function convertScoreToStoryPoint(score) {
+      if (score <= 0) return { point: null, meaning: 'Select criteria to calculate', shouldSplit: false };
+      if (score <= 6) return { point: 2, meaning: 'Small', shouldSplit: false };
+      if (score <= 9) return { point: 3, meaning: 'Small-medium', shouldSplit: false };
+      if (score <= 12) return { point: 5, meaning: 'Normal', shouldSplit: false };
+      if (score <= 15) return { point: 8, meaning: 'Large', shouldSplit: false };
+      return { point: 13, meaning: 'Too large - should split', shouldSplit: true };
+    }
+
+    function voteSuggestedPoint() {
+      if (currentSuggestedStoryPoint === null) {
+        alert('Please fill the estimation calculator first.');
+        return;
+      }
+      castVote(currentSuggestedStoryPoint);
+    }
+
+    function resetEstimationForm() {
+      document.querySelectorAll('.technical-domain-checkbox').forEach(input => input.checked = false);
+      document.querySelectorAll('.booster-checkbox').forEach(input => input.checked = false);
+      document.getElementById('criteriaContainer').innerHTML = '<div class="alert alert-secondary">Select at least one technical domain to generate the scoring table.</div>';
+      updateEstimationSummary();
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     const taskIdFromURL = urlParams.get('taskId');
@@ -217,11 +671,10 @@
       document.getElementById('taskId').value = taskIdFromURL;
       document.getElementById('taskId').disabled = false;
       document.getElementById('taskDescription').style.display = 'none';
-      document.getElementById("startTaskButton").style.display = "none";
-      document.getElementById("joinTaskButton").style.display = "inline-block";
+      document.getElementById('startTaskButton').style.display = 'none';
+      document.getElementById('joinTaskButton').style.display = 'inline-block';
       document.getElementById('shareLink').style.display = 'none';
 
-      // Fetch and display task details if taskId exists in the URL
       fetch(`/getTaskInfo?taskId=${taskIdFromURL}`)
         .then(response => response.json())
         .then(data => {
@@ -232,160 +685,82 @@
           }
         })
         .catch(err => console.error('Error fetching task info:', err));
-        
     } else {
-      document.getElementById("joinTaskButtonSecondary").style.display = "inline-block";
+      document.getElementById('joinTaskButtonSecondary').style.display = 'inline-block';
     }
 
-    socket.on('taskError', (message) => {
-      alert(message);
-    });
+    socket.on('taskError', (message) => alert(message));
 
     function copyLink() {
       const linkText = document.getElementById('sharedLinkText').textContent.replace('Share this link: ', '');
       navigator.clipboard.writeText(linkText)
-        .then(() => alert("Link copied to clipboard!"))
-        .catch((err) => alert("Failed to copy link."));
+        .then(() => alert('Link copied to clipboard!'))
+        .catch(() => alert('Failed to copy link.'));
     }
 
     function showJoinForm() {
-      // Show the join form elements and hide start form elements
-      document.getElementById("taskDescription").style.display = "none";
-      document.getElementById("startTaskButton").style.display = "none";
-      document.getElementById("joinTaskButton").style.display = "inline-block";
-      document.getElementById("goBackButton").style.display = "inline-block";
-      document.getElementById("joinTaskButtonSecondary").style.display = "none";
+      document.getElementById('taskDescription').style.display = 'none';
+      document.getElementById('startTaskButton').style.display = 'none';
+      document.getElementById('joinTaskButton').style.display = 'inline-block';
+      document.getElementById('goBackButton').style.display = 'inline-block';
+      document.getElementById('joinTaskButtonSecondary').style.display = 'none';
     }
 
     function goBack() {
-      // Reset the form to the original state
-      document.getElementById("taskDescription").style.display = "inline-block";
-      document.getElementById("startTaskButton").style.display = "inline-block";
-      document.getElementById("joinTaskButton").style.display = "none";
-      document.getElementById("goBackButton").style.display = "none";
-      document.getElementById("joinTaskButtonSecondary").style.display = "inline";
+      document.getElementById('taskDescription').style.display = 'inline-block';
+      document.getElementById('startTaskButton').style.display = 'inline-block';
+      document.getElementById('joinTaskButton').style.display = 'none';
+      document.getElementById('goBackButton').style.display = 'none';
+      document.getElementById('joinTaskButtonSecondary').style.display = 'inline';
     }
 
-    function calculateDifference(votes) {
-      const voteValues = Object.values(votes);
+    function calculateDifference(users) {
+      const voteValues = Object.values(users)
+        .map(user => Number(user.point))
+        .filter(value => !Number.isNaN(value));
+
+      if (voteValues.length === 0) return;
+
       const minVote = Math.min(...voteValues);
       const maxVote = Math.max(...voteValues);
       const diff = maxVote - minVote;
 
       const indicatorDiv = document.getElementById('indicator');
+      document.getElementById('indicator').style.display = 'block';
       if (diff > threshold) {
-        indicatorDiv.innerText = `Difference between highest and lowest votes is ${diff}, which exceeds the threshold (${threshold}). Please vote again.`;
+        indicatorDiv.innerText = `Difference between highest and lowest votes is ${diff}, which exceeds the threshold (${threshold}). Please discuss and vote again.`;
       } else {
-        indicatorDiv.innerText = 'All team members are on a same place'; // Clear indicator if within threshold
+        indicatorDiv.innerText = 'All team members are aligned enough for this estimation.';
       }
 
       displayDiffChart(minVote, maxVote);
-
-      highlightVotes(votes, minVote, maxVote);
-
+      highlightVotes(users, minVote, maxVote);
     }
 
-
-    function highlightVotes(votes, minVote, maxVote) {
+    function highlightVotes(users, minVote, maxVote) {
       const resultsDiv = document.getElementById('results');
       resultsDiv.innerHTML = '';
 
-      for (const [user, vote] of Object.entries(votes)) {
+      for (const [user, userInfo] of Object.entries(users)) {
+        const vote = Number(userInfo.point);
         const voteDiv = document.createElement('div');
         voteDiv.className = 'card';
 
-        if (vote === minVote) {
-          voteDiv.classList.add('highlight-low');
-        } else if (vote === maxVote) {
-          voteDiv.classList.add('highlight-high');
-        }
+        if (vote === minVote) voteDiv.classList.add('highlight-low');
+        else if (vote === maxVote) voteDiv.classList.add('highlight-high');
 
-        voteDiv.innerText = `${user}: ${vote}`;
+        voteDiv.innerText = `${user}: ${userInfo.point}`;
         resultsDiv.appendChild(voteDiv);
       }
     }
 
-    function updateVoteLineChart(votes) {
-      const users = Object.keys(votes);
-      const voteValues = users.map(user => votes[user]);
-      
-      if (voteLineChart) voteLineChart.destroy(); // Destroy previous chart instance
-      
-
-      document.getElementById('voteLineChart').style.display = 'block';
-
-
-      const ctx = document.getElementById('voteLineChart').getContext('2d');
-      
-      voteLineChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: users, // Usernames as labels
-          datasets: [{
-            label: 'Votes',
-            data: voteValues, // Current votes of each user
-            fill: false,
-            borderColor: '#add8e6',
-            borderWidth: 1,
-            tension: 0.1
-          }]
-        },
-        options: {
-          scales: { 
-            y: { 
-              beginAtZero: true,
-              ticks: { stepSize: 1 }
-            }
-          }
-        }
-      });
-      
-
-      /*
-      voteLineChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: users,
-                datasets: [{
-                    label: 'Votes',
-                    data: voteValues,
-                    backgroundColor: 'lightblue',
-                    borderColor: 'blue',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Users'
-                        }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Vote Points'
-                        }
-                    }
-                }
-            }
-        });
-      */
-        
-    }
-
-    // New function to display the difference chart
     function displayDiffChart(minVote, maxVote) {
       const ctx = document.getElementById('diffChart').getContext('2d');
       document.getElementById('diffChart').style.display = 'block';
 
       if (diffChartInstance) diffChartInstance.destroy();
 
-    diffChartInstance = new Chart(ctx, {
+      diffChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: ['Lowest Vote', 'Highest Vote'],
@@ -397,11 +772,7 @@
             borderWidth: 1
           }]
         },
-        options: {
-          scales: {
-            y: { beginAtZero: true }
-          }
-        }
+        options: { scales: { y: { beginAtZero: true } } }
       });
     }
 
@@ -410,18 +781,30 @@
       const taskId = document.getElementById('taskId').value;
       const taskDescription = document.getElementById('taskDescription').value;
 
-      // Validate that the username is not empty
-      if (!user) {
-        alert("Username is required!");
-        return;
-      }
-      if (!taskId) {
-        alert("Task ID is required!");
-        return;
-      }
+      if (!user) { alert('Username is required!'); return; }
+      if (!taskId) { alert('Task ID is required!'); return; }
 
       currentTaskId = taskId;
       socket.emit('startTask', { taskId, taskDescription, user });
+      registerSocketListeners();
+    }
+
+    function joinTask() {
+      const user = document.getElementById('username').value.toUpperCase();
+      const taskId = document.getElementById('taskId').value || taskIdFromURL;
+
+      if (!user) { alert('Username is required!'); return; }
+
+      currentTaskId = taskId;
+      socket.emit('joinTask', { taskId, user });
+      registerSocketListeners();
+    }
+
+    function registerSocketListeners() {
+      socket.off('isHost');
+      socket.off('shareLink');
+      socket.off('taskInfo');
+      socket.off('votesUpdate');
 
       socket.on('isHost', (hostStatus) => {
         isHost = hostStatus;
@@ -442,43 +825,11 @@
         displayVotes(users, reveal);
         if (reveal && averageVote !== undefined) {
           showAverageChart(averageVote, users);
-        }
-      });
-    }
-
-    function joinTask() {
-      const user = document.getElementById('username').value.toUpperCase();
-      const taskId = document.getElementById('taskId').value || taskIdFromURL;
-
-      // Validate that the username is not empty
-      if (!user) {
-        alert("Username is required!");
-        return;
-      }
-
-      currentTaskId = taskId;
-      socket.emit('joinTask', { taskId, user });
-
-      socket.on('isHost', (hostStatus) => {
-        isHost = hostStatus;
-        document.getElementById('hostControls').style.display = isHost ? 'block' : 'none';
-      });
-
-      socket.on('taskInfo', ({ taskId, taskDescription, users }) => {
-        displayTaskDetails(taskId, taskDescription);
-        updateUserList(users);
-        document.getElementById('voting').style.display = 'block';
-      });
-
-      socket.on('votesUpdate', (users, reveal, averageVote) => {
-        displayVotes(users, reveal);
-
-        if (reveal && averageVote !== undefined) {
-          showAverageChart(averageVote, users);
         } else {
           resetCharts();
           document.getElementById('results').innerHTML = '';
           document.getElementById('indicator').innerText = '';
+          document.getElementById('indicator').style.display = 'none';
         }
       });
     }
@@ -487,82 +838,50 @@
       const user = document.getElementById('username').value.toUpperCase();
       socket.emit('castVote', { taskId: currentTaskId, user, vote });
 
-      // Remove the selected style from all buttons
       const voteButtons = document.querySelectorAll('#voting .btn');
       voteButtons.forEach(button => button.classList.remove('selected-vote'));
 
-      // Add the selected style to the clicked button
       const selectedButton = document.querySelector(`#voting .btn-outline-primary[value="${vote}"]`);
-      if (selectedButton) {
-        selectedButton.classList.add('selected-vote');
-      }
+      if (selectedButton) selectedButton.classList.add('selected-vote');
     }
 
-    function revealVotes() {
-      socket.emit('revealVotes', currentTaskId);
-    }
+    function revealVotes() { socket.emit('revealVotes', currentTaskId); }
 
     function resetVotes() {
       socket.emit('resetVotes', currentTaskId);
-
       resetCharts();
       document.getElementById('results').innerHTML = '';
       document.getElementById('indicator').innerText = '';
+      document.getElementById('indicator').style.display = 'none';
     }
 
     function resetCharts() {
-      if (averageChartInstance) {
-        averageChartInstance.destroy();
-        averageChartInstance = null;
-      }
-      if (diffChartInstance) {
-        diffChartInstance.destroy();
-        diffChartInstance = null;
-      }
-      if (voteLineChart) {
-        voteLineChart.destroy();
-        voteLineChart = null;
-      }
-      
+      if (averageChartInstance) { averageChartInstance.destroy(); averageChartInstance = null; }
+      if (diffChartInstance) { diffChartInstance.destroy(); diffChartInstance = null; }
+      if (voteLineChart) { voteLineChart.destroy(); voteLineChart = null; }
+
       document.getElementById('averageChart').style.display = 'none';
       document.getElementById('diffChart').style.display = 'none';
       document.getElementById('voteLineChart').style.display = 'none';
     }
 
     function displayVotes(users, reveal) {
-      /*
-      const resultsDiv = document.getElementById('results');
-      resultsDiv.innerHTML = '';
-      for (const [user, vote] of Object.entries(votes)) {
-        const card = document.createElement('div');
-        card.className = 'col-md-3 col-sm-4 col-xs-6'; // Bootstrap grid for responsiveness
-        const voteCard = document.createElement('div');
-        voteCard.className = 'card';
-        voteCard.textContent = user + '-' + (reveal ? vote : '?');
-        card.appendChild(voteCard);
-        resultsDiv.appendChild(card);
-      }
-        */
-
       updateUserList(users, reveal);
-
-      if (reveal) {
-        //updateVoteLineChart(users);
-      }
     }
 
     function displayTaskDetails(taskId, taskDescription) {
-      document.getElementById('taskDetails').innerText = `Task: ${taskId} - ${taskDescription}`;
+      document.getElementById('taskDetails').innerText = `Task: ${taskId} - ${taskDescription || ''}`;
     }
 
     function updateUserList(users, reveal) {
       const userList = document.getElementById('userList');
       userList.innerHTML = '';
-      for (const [user, { voted }, point] of Object.entries(users)) {
+
+      for (const [user, userInfo] of Object.entries(users)) {
         const userItem = document.createElement('div');
         userItem.className = 'user-item';
         const statusIcon = document.createElement('div');
-        statusIcon.className = 'status-icon ' + (voted ? 'voted' : 'not-voted');
+        statusIcon.className = 'status-icon ' + (userInfo.voted ? 'voted' : 'not-voted');
         const userName = document.createElement('span');
         userName.textContent = user;
         userItem.appendChild(statusIcon);
@@ -573,10 +892,9 @@
       displayUsers(users, reveal);
     }
 
-
     function displayUsers(users, reveal) {
       const userAvatarsContainer = document.getElementById('userAvatars');
-      userAvatarsContainer.innerHTML = ''; // Clear existing avatars
+      userAvatarsContainer.innerHTML = '';
 
       for (const userKey in users) {
         const user = users[userKey];
@@ -585,23 +903,13 @@
 
         const avatarCircle = document.createElement('div');
         avatarCircle.className = 'avatar-circle';
-
-        // Display vote inside the avatar
         avatarCircle.innerText = reveal ? user.point : '?';
 
-        console.log(user);
-        console.log(user.voted);
-        console.log(user.point);
-        console.log(users);
-
-        // Status icon
         const statusIcon = document.createElement('div');
         statusIcon.className = 'status-icon';
-        statusIcon.style.backgroundColor = user.voted ? 'green' : 'gray';
-
+        statusIcon.style.backgroundColor = user.voted ? 'green' : 'red';
         avatarCircle.appendChild(statusIcon);
 
-        // User name below the avatar
         const username = document.createElement('div');
         username.className = 'username';
         username.innerText = userKey;
@@ -609,7 +917,7 @@
         userDiv.appendChild(avatarCircle);
         userDiv.appendChild(username);
         userAvatarsContainer.appendChild(userDiv);
-      };
+      }
     }
 
     function showAverageChart(averageVote, users) {
@@ -618,7 +926,7 @@
 
       if (averageChartInstance) averageChartInstance.destroy();
 
-    averageChartInstance = new Chart(ctx, {
+      averageChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
           labels: ['Average Points'],
@@ -630,17 +938,13 @@
             borderWidth: 1
           }]
         },
-        options: {
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
+        options: { scales: { y: { beginAtZero: true } } }
       });
 
       calculateDifference(users);
     }
+
+    document.addEventListener('DOMContentLoaded', initEstimationAssistant);
   </script>
 </body>
 </html>
