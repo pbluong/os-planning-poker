@@ -95,17 +95,37 @@
 
     .avatar-circle {
       position: relative;
-      width: 50px;
-      height: 50px;
+
+      width: 58px;
+      height: 58px;
+
       border-radius: 50%;
-      background-color: #e0e0e0;
+
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 14px;
-      color: #333;
-      border: 2px solid #ddd;
-      font-weight: bold;
+
+      overflow: visible;
+
+      background: #ffffff;
+
+      border: 3px solid #ffffff;
+
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(13, 110, 253, 0.08);
+
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+    }
+
+    .avatar-circle:hover {
+      transform: translateY(-2px);
+
+      box-shadow:
+        0 8px 18px rgba(0, 0, 0, 0.18),
+        0 0 0 1px rgba(13, 110, 253, 0.15);
     }
 
     .status-icon {
@@ -120,10 +140,18 @@
     }
 
     .username {
-      margin-top: 5px;
+      margin-top: 8px;
+
       font-size: 12px;
-      color: #333;
-      font-weight: bold;
+      font-weight: 600;
+
+      color: #344054;
+
+      max-width: 72px;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .domain-checkbox-grid {
@@ -354,6 +382,52 @@
 
     .booster-row strong {
       color: #b45309;
+    }
+
+    .generated-avatar {
+      width: 100%;
+      height: 100%;
+
+      border-radius: 50%;
+
+      object-fit: cover;
+
+      display: block;
+    }
+
+    .vote-overlay {
+      position: absolute;
+
+      bottom: -5px;
+      right: -5px;
+
+      min-width: 24px;
+      height: 24px;
+
+      padding: 0 6px;
+
+      border-radius: 999px;
+
+      background: linear-gradient(135deg, #0d6efd, #4c93df);
+
+      color: #fff;
+
+      font-size: 11px;
+      font-weight: 700;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border: 2px solid #fff;
+
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+
+      z-index: 2;
+    }
+
+    .avatar-circle {
+      overflow: visible;
     }
 
   </style>
@@ -1213,6 +1287,30 @@
       displayUsers(users, reveal);
     }
 
+    function getAvatarUrl(userKey) {
+      const avatarStyles = [
+        'bottts',
+        'pixel-art',
+        'identicon',
+        'adventurer',
+        'fun-emoji',
+        'thumbs',
+        'croodles',
+        'micah'
+      ];
+
+      let hash = 0;
+
+      for (let i = 0; i < userKey.length; i++) {
+        hash = userKey.charCodeAt(i) + ((hash << 5) - hash);
+      }
+
+      const style =
+        avatarStyles[Math.abs(hash) % avatarStyles.length];
+
+      return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(userKey)}`;
+    }
+
     function displayUsers(users, reveal) {
       const userAvatarsContainer = document.getElementById('userAvatars');
       userAvatarsContainer.innerHTML = '';
@@ -1225,7 +1323,18 @@
 
         const avatarCircle = document.createElement('div');
         avatarCircle.className = 'avatar-circle';
-        avatarCircle.innerText = reveal ? user.point : '?';
+        
+        const avatarUrl = getAvatarUrl(userKey);
+        avatarCircle.innerHTML = `
+          <img
+            src="${avatarUrl}"
+            alt="${userKey}"
+            class="generated-avatar">
+
+          <div class="vote-overlay">
+            ${reveal ? user.point : '?'}
+          </div>
+        `;
 
         const statusIcon = document.createElement('div');
         statusIcon.className = 'status-icon';
