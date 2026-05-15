@@ -23,6 +23,12 @@
       border-color: #007bff;
     }
 
+    .score-input {
+      width: 80px;
+      font-weight: 500;
+      text-align: center;
+    }
+
     .card {
       display: inline-block;
       padding: 10px;
@@ -564,14 +570,26 @@
                 <tr>
                   <td class="fw-semibold">${criteria.label}</td>
                   <td>
-                    <input type="number"
-                           class="form-control form-control-sm score-input criteria-score"
-                           id="${criteria.key}"
-                           min="${criteria.min}"
-                           max="${criteria.max}"
-                           value="${criteria.min}"
-                           onchange="normalizeScoreInput(this); updateEstimationSummary();"
-                           oninput="normalizeScoreInput(this); updateEstimationSummary();">
+                    <select
+                        class="form-select form-select-sm score-input criteria-score"
+                        id="${criteria.key}"
+                        onchange="updateEstimationSummary();">
+
+                        ${Array.from(
+                          { length: criteria.max - criteria.min + 1 },
+                          (_, i) => {
+                            const value = i + criteria.min;
+
+                            return `
+                              <option value="${value}"
+                                      ${value === criteria.min ? 'selected' : ''}>
+                                ${value}
+                              </option>
+                            `;
+                          }
+                        ).join('')}
+
+                    </select>
                   </td>
                   <td class="criteria-help">${criteria.help}<br><span class="badge bg-light text-dark">${criteria.min}–${criteria.max}</span></td>
                 </tr>
@@ -609,17 +627,6 @@
       return Array.from(document.querySelectorAll('.technical-domain-checkbox:checked')).map(input => input.value);
     }
 
-    function normalizeScoreInput(input) {
-      const min = Number(input.min);
-      const max = Number(input.max);
-      let value = Number(input.value);
-
-      if (Number.isNaN(value)) value = min;
-      if (value < min) value = min;
-      if (value > max) value = max;
-
-      input.value = value;
-    }
 
     function updateEstimationSummary() {
       const baseScore = Array.from(document.querySelectorAll('.criteria-score'))
@@ -659,11 +666,24 @@
     }
 
     function resetEstimationForm() {
-      document.querySelectorAll('.technical-domain-checkbox').forEach(input => input.checked = false);
-      document.querySelectorAll('.booster-checkbox').forEach(input => input.checked = false);
-      document.getElementById('criteriaContainer').innerHTML = '<div class="alert alert-secondary">Select at least one technical domain to generate the scoring table.</div>';
-      updateEstimationSummary();
-    }
+
+        document.querySelectorAll('.technical-domain-checkbox').forEach(input => {
+          input.checked = false;
+        });
+
+        document.querySelectorAll('.domain-card').forEach(card => {
+          card.classList.remove('selected');
+        });
+
+        document.querySelectorAll('.booster-checkbox').forEach(input => {
+          input.checked = false;
+        });
+
+        document.getElementById('criteriaContainer').innerHTML =
+          '<div class=\"alert alert-secondary\">Select at least one technical domain to generate the scoring table.</div>';
+
+        updateEstimationSummary();
+      }
 
     const urlParams = new URLSearchParams(window.location.search);
     const taskIdFromURL = urlParams.get('taskId');
