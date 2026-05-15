@@ -11,6 +11,49 @@ let sessions = {};
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+function createUserState() {
+  return {
+    voted: false,
+    point: 0,
+    estimation: null
+  };
+}
+
+function sanitizeEstimation(estimation, vote) {
+  if (!estimation || typeof estimation !== 'object') {
+    return {
+      suggestedStoryPoint: vote,
+      finalScore: null,
+      baseScore: null,
+      boosterScore: null,
+      domains: [],
+      criteria: [],
+      boosters: [],
+      customCriteria: []
+    };
+  }
+
+  return {
+    suggestedStoryPoint: Number(estimation.suggestedStoryPoint ?? vote),
+    finalScore: toNullableNumber(estimation.finalScore),
+    baseScore: toNullableNumber(estimation.baseScore),
+    boosterScore: toNullableNumber(estimation.boosterScore),
+    domains: sanitizeArray(estimation.domains),
+    criteria: sanitizeArray(estimation.criteria),
+    boosters: sanitizeArray(estimation.boosters),
+    customCriteria: sanitizeArray(estimation.customCriteria)
+  };
+}
+
+function toNullableNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function sanitizeArray(value) {
+  return Array.isArray(value) ? value.slice(0, 100) : [];
+}
+
 app.get('/getTaskInfo', (req, res) => {
   const taskId = req.query.taskId;
   // Find task details based on taskId (example only, use your actual data source)
@@ -32,7 +75,7 @@ io.on('connection', (socket) => {
         taskDescription,
         host: user,
         votes: {},
-        users: { [user]: { voted: false, point: 0 } }
+        users: { [user]: createUserState() }
       };
     }
     socket.join(taskId);
@@ -53,7 +96,7 @@ io.on('connection', (socket) => {
   
     // Add the user to the session if not already added
     if (!sessions[taskId].users[user]) {
-      sessions[taskId].users[user] = { voted: false, point: 0 };
+      sessions[taskId].users[user] = createUserState();
     }
     socket.join(taskId);
   
@@ -71,18 +114,26 @@ io.on('connection', (socket) => {
   });
 
   // Handle vote casting, reveal, and reset as previously described
-  socket.on('castVote', ({ taskId, user, vote }) => {
-    if (sessions[taskId]) {
-      if (!sessions[taskId].users[user]) {
-        sessions[taskId].users[user] = { voted: false, point: 0 };
-      }
-      sessions[taskId].votes[user] = vote;
-      sessions[taskId].users[user].voted = true;
-      sessions[taskId].users[user].point = vote;
+  socket.on('castVote', ({ taskId, user, vote, estimation }) => {
+    if (!sessions[taskId]) return;
 
-      io.to(taskId).emit('votesUpdate', sessions[taskId].users, false);
-      io.to(taskId).emit('taskInfo', { taskId, taskDescription: sessions[taskId].taskDescription, users: sessions[taskId].users });
+    if (!sessions[taskId].users[user]) {
+      sessions[taskId].users[user] = createUserState();
     }
+
+    const numericVote = Number(vote);
+
+    sessions[taskId].votes[user] = numericVote;
+    sessions[taskId].users[user].voted = true;
+    sessions[taskId].users[user].point = numericVote;
+    sessions[taskId].users[user].estimation = sanitizeEstimation(estimation, numericVote);
+
+    io.to(taskId).emit('votesUpdate', sessions[taskId].users, false);
+    io.to(taskId).emit('taskInfo', {
+      taskId,
+      taskDescription: sessions[taskId].taskDescription,
+      users: sessions[taskId].users
+    });
   });
 
   socket.on('revealVotes', (taskId) => {
@@ -102,14 +153,23 @@ io.on('connection', (socket) => {
   socket.on('resetVotes', (taskId) => {
     if (sessions[taskId]) {
       sessions[taskId].votes = {};
+
       for (let user in sessions[taskId].users) {
         sessions[taskId].users[user].voted = false;
         sessions[taskId].users[user].point = 0;
+        sessions[taskId].users[user].estimation = null;
       }
+
       io.to(taskId).emit('votesUpdate', sessions[taskId].users, false);
-      io.to(taskId).emit('taskInfo', { taskId, taskDescription: sessions[taskId].taskDescription, users: sessions[taskId].users });
+      io.to(taskId).emit('taskInfo', {
+        taskId,
+        taskDescription: sessions[taskId].taskDescription,
+        users: sessions[taskId].users
+      });
     }
   });
+
+
 });
 
 server.listen(3000, () => {
