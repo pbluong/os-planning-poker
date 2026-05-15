@@ -266,6 +266,96 @@
       .booster-checkbox-list { columns: 1; }
       .summary-box { position: static; }
     }
+
+
+    .estimation-popover {
+      max-width: 420px;
+      font-size: 0.85rem;
+    }
+
+    .estimation-popover table {
+      margin-bottom: 8px;
+    }
+
+    .estimation-popover .section-title {
+      font-weight: 700;
+      margin-top: 8px;
+      margin-bottom: 4px;
+    }
+
+    .estimation-popover {
+      max-width: 440px;
+    }
+
+    .estimation-detail {
+      font-size: 0.86rem;
+    }
+
+    .estimation-score-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .estimation-score-grid div {
+      background: #f8f9fa;
+      border: 1px solid #e3e6ea;
+      border-radius: 8px;
+      padding: 8px 10px;
+    }
+
+    .estimation-score-grid span {
+      display: block;
+      font-size: 0.72rem;
+      color: #6c757d;
+    }
+
+    .estimation-score-grid strong {
+      font-size: 1.1rem;
+    }
+
+    .section-title {
+      font-weight: 700;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+
+    .domain-detail-block {
+      border: 1px solid #e3e6ea;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .domain-detail-title {
+      background: #f1f5f9;
+      padding: 6px 10px;
+      font-weight: 700;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 6px 10px;
+      border-top: 1px solid #edf0f2;
+    }
+
+    .detail-row span {
+      color: #374151;
+    }
+
+    .detail-note {
+      padding: 0 10px 6px 10px;
+      color: #6c757d;
+      font-size: 0.78rem;
+    }
+
+    .booster-row strong {
+      color: #b45309;
+    }
+
   </style>
 </head>
 <body class="bg-light">
@@ -323,6 +413,9 @@
 
       <div class="col-md-8">
         <div id="taskDetails" class="alert alert-info">Please start or join a task...</div>
+
+        <div id="estimationDetailPopover" class="d-none"></div>
+
 
         <div id="voting" class="mt-3 text-center" style="display: none;">
           <div class="btn-group flex-wrap" role="group">
@@ -944,13 +1037,133 @@
 
     function castVote(vote) {
       const user = document.getElementById('username').value.toUpperCase();
-      socket.emit('castVote', { taskId: currentTaskId, user, vote });
+
+      socket.emit('castVote', {
+        taskId: currentTaskId,
+        user,
+        vote,
+        estimation: collectEstimationDetails(vote)
+      });
 
       const voteButtons = document.querySelectorAll('#voting .btn');
       voteButtons.forEach(button => button.classList.remove('selected-vote'));
 
       const selectedButton = document.querySelector(`#voting .btn-outline-primary[value="${vote}"]`);
-      if (selectedButton) selectedButton.classList.add('selected-vote');
+      if (selectedButton) {
+        selectedButton.classList.add('selected-vote');
+      }
+    }
+
+    function collectEstimationDetails(vote) {
+      return {
+        suggestedStoryPoint: currentSuggestedStoryPoint,
+        finalScore: Number(document.getElementById('finalScore')?.innerText || 0),
+        baseScore: Number(document.getElementById('baseScore')?.innerText || 0),
+        boosterScore: Number(document.getElementById('boosterScore')?.innerText || 0),
+        domains: getSelectedDomains(),
+        criteria: collectCriteriaDetails(),
+        boosters: collectSelectedBoosters(),
+        customCriteria: collectCustomCriteriaDetails()
+      };
+    }
+
+    function collectCriteriaDetails() {
+      const result = [];
+
+      document.querySelectorAll('.domain-section').forEach(section => {
+
+        const domainTitle =
+          section.querySelector('h5')?.innerText?.trim() || 'Unknown';
+
+        section.querySelectorAll('tbody tr').forEach(row => {
+
+          if (row.classList.contains('custom-criteria-row')) {
+            return;
+          }
+
+          const label =
+            row.querySelector('td:first-child')?.innerText?.trim();
+
+          const scoreElement =
+            row.querySelector('.criteria-score');
+
+          const score =
+            Number(scoreElement?.value || 0);
+
+          result.push({
+            domain: domainTitle,
+            label,
+            score
+          });
+
+        });
+
+      });
+
+      return result;
+    }
+
+
+    function collectSelectedBoosters() {
+      const result = [];
+
+      document.querySelectorAll('.booster-checkbox:checked')
+        .forEach(input => {
+
+          const label =
+            input.parentElement.querySelector('label')?.innerText?.trim();
+
+          result.push({
+            label,
+            score: Number(input.value || 0)
+          });
+
+        });
+
+      return result;
+    }
+
+
+    function collectCustomCriteriaDetails() {
+      const result = [];
+
+      document.querySelectorAll('.custom-criteria-row')
+        .forEach(row => {
+
+          const name =
+            row.querySelector('.custom-criteria-name')?.value?.trim();
+
+          const score =
+            Number(
+              row.querySelector('.criteria-score')?.value || 0
+            );
+
+          const note =
+            row.querySelector('input[placeholder=\"Optional note\"]')
+              ?.value
+              ?.trim();
+
+          if (!name) {
+            return;
+          }
+
+          const domainSection =
+            row.closest('.domain-section');
+
+          const domain =
+            domainSection?.querySelector('h5')?.innerText?.trim()
+            || 'Unknown';
+
+          result.push({
+            domain,
+            label: name,
+            score,
+            note
+          });
+
+        });
+
+      return result;
     }
 
     function revealVotes() { socket.emit('revealVotes', currentTaskId); }
@@ -1006,6 +1219,7 @@
 
       for (const userKey in users) {
         const user = users[userKey];
+
         const userDiv = document.createElement('div');
         userDiv.className = 'user-avatar';
 
@@ -1015,8 +1229,20 @@
 
         const statusIcon = document.createElement('div');
         statusIcon.className = 'status-icon';
-        statusIcon.style.backgroundColor = user.voted ? 'green' : 'red';
+        statusIcon.style.backgroundColor = user.voted ? 'green' : 'gray';
+
         avatarCircle.appendChild(statusIcon);
+
+        if (reveal && user.estimation) {
+          avatarCircle.setAttribute('tabindex', '0');
+          avatarCircle.setAttribute('role', 'button');
+          avatarCircle.setAttribute('data-bs-toggle', 'popover');
+          avatarCircle.setAttribute('data-bs-html', 'true');
+          avatarCircle.setAttribute('data-bs-trigger', 'hover focus');
+          avatarCircle.setAttribute('data-bs-placement', 'auto');
+          avatarCircle.setAttribute('title', `${userKey} - Estimation Details`);
+          avatarCircle.setAttribute('data-bs-content', buildEstimationPopoverContent(user.estimation));
+        }
 
         const username = document.createElement('div');
         username.className = 'username';
@@ -1026,7 +1252,126 @@
         userDiv.appendChild(username);
         userAvatarsContainer.appendChild(userDiv);
       }
+
+      initEstimationPopovers();
     }
+
+    function initEstimationPopovers() {
+      const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+
+      popoverTriggerList.forEach(el => {
+        const existingPopover = bootstrap.Popover.getInstance(el);
+        if (existingPopover) {
+          existingPopover.dispose();
+        }
+
+        new bootstrap.Popover(el, {
+          container: 'body',
+          html: true,
+          sanitize: false,
+          customClass: 'estimation-popover'
+        });
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function buildEstimationPopoverContent(estimation) {
+      const groupedCriteria = groupByDomain(estimation.criteria || []);
+      const groupedCustomCriteria = groupByDomain(estimation.customCriteria || []);
+
+      return `
+        <div class="estimation-detail">
+
+          <div class="estimation-score-grid">
+            <div><span>Final</span><strong>${estimation.finalScore ?? '-'}</strong></div>
+            <div><span>Mapped SP</span><strong>${estimation.suggestedStoryPoint ?? '-'}</strong></div>
+            <div><span>Base</span><strong>${estimation.baseScore ?? '-'}</strong></div>
+            <div><span>Boosters</span><strong>${estimation.boosterScore ?? '-'}</strong></div>
+          </div>
+
+          ${renderGroupedCriteria('Criteria', groupedCriteria)}
+
+          ${renderBoosters(estimation.boosters || [])}
+
+          ${renderGroupedCriteria('Custom Criteria', groupedCustomCriteria)}
+
+        </div>
+      `;
+    }
+
+    function groupByDomain(items) {
+      return items.reduce((acc, item) => {
+        const domain = item.domain || 'General';
+        if (!acc[domain]) acc[domain] = [];
+        acc[domain].push(item);
+        return acc;
+      }, {});
+    }
+
+    function renderGroupedCriteria(title, groupedItems) {
+      const domainNames = Object.keys(groupedItems);
+
+      if (domainNames.length === 0) {
+        return `
+          <div class="section-title">${title}</div>
+          <div class="text-muted small">None</div>
+        `;
+      }
+
+      return `
+        <div class="section-title">${title}</div>
+
+        ${domainNames.map(domain => `
+          <div class="domain-detail-block">
+            <div class="domain-detail-title">${escapeHtml(domain)}</div>
+
+            ${groupedItems[domain].map(item => `
+              <div class="detail-row">
+                <span>${escapeHtml(item.label || '')}</span>
+                <strong>${item.score ?? 0}</strong>
+              </div>
+
+              ${item.note ? `
+                <div class="detail-note">
+                  ${escapeHtml(item.note)}
+                </div>
+              ` : ''}
+            `).join('')}
+
+          </div>
+        `).join('')}
+      `;
+    }
+
+    function renderBoosters(boosters) {
+      if (!boosters.length) {
+        return `
+          <div class="section-title">Boosters</div>
+          <div class="text-muted small">None</div>
+        `;
+      }
+
+      return `
+        <div class="section-title">Boosters</div>
+
+        ${boosters.map(item => `
+          <div class="detail-row booster-row">
+            <span>${escapeHtml(item.label || '')}</span>
+            <strong>+${item.score ?? 0}</strong>
+          </div>
+        `).join('')}
+      `;
+    }
+
+
 
     function showAverageChart(averageVote, users) {
       const ctx = document.getElementById('averageChart').getContext('2d');
