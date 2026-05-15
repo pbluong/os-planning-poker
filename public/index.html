@@ -422,6 +422,7 @@
             { key: 'gravity-state', label: 'State Management Complexity', min: 0, max: 3, help: '0=none, 1=local state, 2=shared state, 3=complex async/cart/session state' },
             { key: 'gravity-ux', label: 'UI/UX Behavior Complexity', min: 1, max: 3, help: '1=simple display, 2=interaction, 3=complex journey/mobile behavior' },
             { key: 'gravity-testing', label: 'Automated Testing Impact', min: 0, max: 2, help: '0=no test impact, 1=update tests, 2=new mocks/async/integration tests' },
+            { key: 'gravity-manual-testing', label: 'Manual Testing Effort', min: 1, max: 3, help: '1=quick check, 2=several pages/devices, 3=complex regression matrix' },
             { key: 'gravity-shared-risk', label: 'Reusability / Shared Component Risk', min: 0, max: 3, help: '0=isolated, 2=shared by several POS, 3=core shared widget' }
           ]
         },
@@ -435,6 +436,7 @@
             { key: 'java-data-cache', label: 'Data/Cache Impact', min: 0, max: 3, help: '0=none, 1=read-only/data mapping, 2=cache changes, 3=Mongo/session/cache sync risk' },
             { key: 'java-performance', label: 'Performance Sensitivity', min: 0, max: 3, help: '0=low, 1=normal, 2=high traffic, 3=seatmap/cart/catalog/DB-heavy path' },
             { key: 'java-error-handling', label: 'Error Handling Complexity', min: 1, max: 3, help: '1=simple errors, 2=several failure cases, 3=session/auth/transactional recovery' },
+            { key: 'java-security-handling', label: 'Security Handling Complexity', min: 0, max: 3, help: '0=none, 1=simple errors, 2=several failure cases, 3=session/auth/transactional recovery' },
             { key: 'java-testing', label: 'Testing Complexity', min: 1, max: 3, help: '1=unit test, 2=integration test, 3=end-to-end/cross-service regression' }
           ]
         },
