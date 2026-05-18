@@ -1245,6 +1245,7 @@
     function resetVotes() {
       socket.emit('resetVotes', currentTaskId);
       resetCharts();
+      resetEstimationForm();
       document.getElementById('results').innerHTML = '';
       document.getElementById('indicator').innerText = '';
       document.getElementById('indicator').style.display = 'none';
