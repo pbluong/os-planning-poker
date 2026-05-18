@@ -166,6 +166,7 @@ io.on('connection', (socket) => {
         taskDescription: sessions[taskId].taskDescription,
         users: sessions[taskId].users
       });
+      io.to(taskId).emit('resetAllVotes', taskId);
     }
   });
 
