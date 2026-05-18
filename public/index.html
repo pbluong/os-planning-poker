@@ -436,6 +436,8 @@
 
     function resetEstimationForm() {
 
+        resetVoteButtons();
+
         document.querySelectorAll('.technical-domain-checkbox').forEach(input => {
           input.checked = false;
         });
@@ -665,6 +667,8 @@
       socket.off('taskInfo');
       socket.off('votesUpdate');
 
+      socket.off('resetAllVotes');
+
       socket.on('isHost', (hostStatus) => {
         isHost = hostStatus;
         document.getElementById('hostControls').style.display = isHost ? 'block' : 'none';
@@ -686,11 +690,14 @@
           showAverageChart(averageVote, users);
         } else {
           resetCharts();
-         
           document.getElementById('results').innerHTML = '';
           document.getElementById('indicator').innerText = '';
           document.getElementById('indicator').style.display = 'none';
         }
+      });
+
+      socket.on('resetAllVotes', (taskId) => {
+        resetEstimationForm();
       });
     }
 
@@ -704,13 +711,17 @@
         estimation: collectEstimationDetails(vote)
       });
 
-      const voteButtons = document.querySelectorAll('#voting .btn');
-      voteButtons.forEach(button => button.classList.remove('selected-vote'));
+      resetVoteButtons();
 
       const selectedButton = document.querySelector(`#voting .btn-outline-primary[value="${vote}"]`);
       if (selectedButton) {
         selectedButton.classList.add('selected-vote');
       }
+    }
+
+    function resetVoteButtons() {
+      const voteButtons = document.querySelectorAll('#voting .btn');
+      voteButtons.forEach(button => button.classList.remove('selected-vote'));
     }
 
     function collectEstimationDetails(vote) {
