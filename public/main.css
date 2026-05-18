@@ -1,6 +1,6 @@
 #userList, #results { display: none; }
 
-input[type="text"] { text-transform: uppercase; }
+input[id="username"] { text-transform: uppercase; }
 
 #hostControls { padding: 30px; }
 
