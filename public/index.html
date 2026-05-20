@@ -7,6 +7,8 @@
   <link rel="icon" type="image/png" href="/favicon.png">
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
@@ -57,7 +59,7 @@
           <div class="alert alert-warning mt-3 split-warning" id="splitWarning">
             <strong>Recommendation:</strong> score is too high. Split the story before estimation.
           </div>
-          <button class="btn btn-outline-primary btn-sm mt-2" onclick="voteSuggestedPoint()">
+          <button id="voteSuggestedPointBtn" class="btn btn-outline-primary btn-sm mt-2" onclick="voteSuggestedPoint()">
             Vote Suggested Point
           </button>
           <button class="btn btn-outline-secondary btn-sm mt-2" onclick="resetEstimationForm()">
@@ -93,6 +95,9 @@
         <div id="hostControls" class="col-md-12 text-right" style="display: none;">
           <div class="d-flex justify-content-between">
             <button onclick="revealVotes()" class="btn btn-warning">Reveal Votes</button>
+            <button id="downloadPdfBtn" onclick="downloadPDF()" class="btn btn-success" style="display: none;">
+              <i class="bi bi-file-earmark-pdf"></i> Download PDF
+            </button>
             <button onclick="resetVotes()" class="btn btn-danger">Reset Votes</button>
           </div>
         </div>
@@ -147,6 +152,8 @@
     let diffChartInstance = null;
     let voteLineChart = null;
     let currentSuggestedStoryPoint = null;
+    let currentRevealedUsers = null;
+    let currentAverageVote = null;
 
     const estimationModel = {
       domains: {
@@ -686,9 +693,16 @@
 
       socket.on('votesUpdate', (users, reveal, averageVote) => {
         displayVotes(users, reveal);
+        document.getElementById('voteSuggestedPointBtn').disabled = !!reveal;
         if (reveal && averageVote !== undefined) {
+          currentRevealedUsers = users;
+          currentAverageVote = averageVote;
+          document.getElementById('downloadPdfBtn').style.display = 'inline-block';
           showAverageChart(averageVote, users);
         } else {
+          currentRevealedUsers = null;
+          currentAverageVote = null;
+          document.getElementById('downloadPdfBtn').style.display = 'none';
           resetCharts();
           document.getElementById('results').innerHTML = '';
           document.getElementById('indicator').innerText = '';
@@ -997,10 +1011,10 @@
         <div class="estimation-detail">
 
           <div class="estimation-score-grid">
-            <div><span>Final</span><strong>${estimation.finalScore ?? '-'}</strong></div>
-            <div><span>Mapped SP</span><strong>${estimation.suggestedStoryPoint ?? '-'}</strong></div>
-            <div><span>Base</span><strong>${estimation.baseScore ?? '-'}</strong></div>
-            <div><span>Boosters</span><strong>${estimation.boosterScore ?? '-'}</strong></div>
+            <div class="point-final"><span>Final</span><strong>${estimation.finalScore ?? '-'}</strong></div>
+            <div class="point-mapped"><span>Mapped SP</span><strong>${estimation.suggestedStoryPoint ?? '-'}</strong></div>
+            <div class="point-base"><span>Base</span><strong>${estimation.baseScore ?? '-'}</strong></div>
+            <div class="point-booster"><span>Boosters</span><strong>${estimation.boosterScore ?? '-'}</strong></div>
           </div>
 
           ${renderGroupedCriteria('Criteria', groupedCriteria)}
@@ -1101,6 +1115,101 @@
       });
 
       calculateDifference(users);
+    }
+
+    function downloadPDF() {
+      if (!currentRevealedUsers) return;
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      const taskDetails = document.getElementById('taskDetails').innerText;
+      const date = new Date().toLocaleString();
+
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Planning Poker - Vote Summary', 14, 20);
+
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text(taskDetails, 14, 30);
+      doc.text(`Generated: ${date}`, 14, 37);
+
+      const summaryRows = Object.entries(currentRevealedUsers).map(([user, info]) => [
+        user,
+        info.point ?? '-',
+        info.estimation?.baseScore ?? '-',
+        info.estimation?.boosterScore ?? '-',
+        info.estimation?.finalScore ?? '-',
+        info.estimation?.suggestedStoryPoint ?? '-'
+      ]);
+
+      doc.autoTable({
+        startY: 44,
+        head: [['User', 'Vote', 'Base Score', 'Booster Score', 'Final Score', 'Suggested SP']],
+        body: summaryRows,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [13, 110, 253] }
+      });
+
+      let y = doc.lastAutoTable.finalY + 8;
+
+      if (currentAverageVote !== null && currentAverageVote !== undefined) {
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`Average Vote: ${Number(currentAverageVote).toFixed(2)}`, 14, y);
+        y += 10;
+      }
+
+      for (const [user, info] of Object.entries(currentRevealedUsers)) {
+        if (!info.estimation) continue;
+
+        const est = info.estimation;
+
+        if (y > 250) { doc.addPage(); y = 20; }
+
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text(`${user} — Estimation Details`, 14, y);
+        y += 6;
+
+        const criteriaRows = (est.criteria || []).map(c => [c.domain || '', c.label || '', c.score ?? 0]);
+        const customRows = (est.customCriteria || []).map(c => [
+          c.domain || '',
+          c.label + (c.note ? ` (${c.note})` : ''),
+          c.score ?? 0
+        ]);
+        const allCriteriaRows = [...criteriaRows, ...customRows];
+
+        if (allCriteriaRows.length > 0) {
+          doc.autoTable({
+            startY: y,
+            head: [['Domain', 'Criteria', 'Score']],
+            body: allCriteriaRows,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [108, 117, 125] },
+            columnStyles: { 2: { halign: 'center', cellWidth: 20 } }
+          });
+          y = doc.lastAutoTable.finalY + 4;
+        }
+
+        const boosterRows = (est.boosters || []).map(b => [b.label || '', `+${b.score ?? 0}`]);
+        if (boosterRows.length > 0) {
+          doc.autoTable({
+            startY: y,
+            head: [['Booster', 'Score']],
+            body: boosterRows,
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [255, 193, 7], textColor: [0, 0, 0] },
+            columnStyles: { 1: { halign: 'center', cellWidth: 20 } }
+          });
+          y = doc.lastAutoTable.finalY + 4;
+        }
+
+        y += 4;
+      }
+
+      doc.save(`planning-poker-task-${currentTaskId || 'export'}.pdf`);
     }
 
     document.addEventListener('DOMContentLoaded', initEstimationAssistant);
