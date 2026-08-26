@@ -18,13 +18,25 @@
     
   </style>
 </head>
-<body class="bg-light">
-  <div class="container mt-5">
+<body>
+  <div class="container mt-3">
 
-    <div class="app-header d-flex align-items-center justify-content-center mt-5">
-      <img src="/logo.png" alt="Logo" class="logo-img" width="50">
-      <h1 class="app-title">Planning Poker - SALES PORTALS</h1>
-      <img src="/logo.png" alt="Logo" class="logo-img" width="50">
+    <div class="app-header d-flex align-items-center justify-content-center mt-2">
+      <img src="/secutix-logo.png" alt="SecuTix" class="secutix-logo">
+      <div class="app-brand d-flex align-items-center justify-content-center">
+        <img src="/logo.png" alt="Logo" class="logo-img" width="36">
+        <h1 class="app-title">Planning Poker - SALES PORTALS</h1>
+        <img src="/logo.png" alt="Logo" class="logo-img" width="36">
+      </div>
+      <button
+          type="button"
+          id="themeToggle"
+          class="theme-toggle btn btn-outline-secondary btn-sm"
+          onclick="toggleTheme()"
+          title="Switch to dark mode"
+          aria-label="Switch to dark mode">
+        <i class="bi bi-moon-stars"></i>
+      </button>
     </div>
 
     <div class="row mt-4">
@@ -77,18 +89,22 @@
         <div id="estimationDetailPopover" class="d-none"></div>
 
 
-        <div id="voting" class="mt-3 text-center" style="display: none;">
-          <div class="btn-group flex-wrap" role="group">
-            <button onclick="castVote(0)" class="btn btn-outline-primary" value="0">0</button>
-            <button onclick="castVote(1)" class="btn btn-outline-primary" value="1">1</button>
-            <button onclick="castVote(2)" class="btn btn-outline-primary" value="2">2</button>
-            <button onclick="castVote(3)" class="btn btn-outline-primary" value="3">3</button>
-            <button onclick="castVote(5)" class="btn btn-outline-primary" value="5">5</button>
-            <button onclick="castVote(8)" class="btn btn-outline-primary" value="8">8</button>
-            <button onclick="castVote(13)" class="btn btn-outline-primary" value="13">13</button>
-            <button onclick="castVote(21)" class="btn btn-outline-primary" value="21">21</button>
-            <button onclick="castVote(34)" class="btn btn-outline-primary" value="34">34</button>
-            <button onclick="castVote(55)" class="btn btn-outline-primary" value="55">55</button>
+        <div id="voting" class="voting-panel mt-3" style="display: none;">
+          <div class="voting-header">
+            <span>Story Points</span>
+            <i class="bi bi-check2-circle"></i>
+          </div>
+          <div class="vote-grid" role="group" aria-label="Story point vote">
+            <button onclick="castVote(0)" class="btn vote-card vote-card-0 btn-outline-primary" value="0">0</button>
+            <button onclick="castVote(1)" class="btn vote-card vote-card-1 btn-outline-primary" value="1">1</button>
+            <button onclick="castVote(2)" class="btn vote-card vote-card-2 btn-outline-primary" value="2">2</button>
+            <button onclick="castVote(3)" class="btn vote-card vote-card-3 btn-outline-primary" value="3">3</button>
+            <button onclick="castVote(5)" class="btn vote-card vote-card-5 btn-outline-primary" value="5">5</button>
+            <button onclick="castVote(8)" class="btn vote-card vote-card-8 btn-outline-primary" value="8">8</button>
+            <button onclick="castVote(13)" class="btn vote-card vote-card-13 btn-outline-primary" value="13">13</button>
+            <button onclick="castVote(21)" class="btn vote-card vote-card-21 btn-outline-primary" value="21">21</button>
+            <button onclick="castVote(34)" class="btn vote-card vote-card-34 btn-outline-primary" value="34">34</button>
+            <button onclick="castVote(55)" class="btn vote-card vote-card-55 btn-outline-primary" value="55">55</button>
           </div>
         </div>
 
@@ -154,6 +170,85 @@
     let currentSuggestedStoryPoint = null;
     let currentRevealedUsers = null;
     let currentAverageVote = null;
+    let userDeckWasRevealed = false;
+    let lastVotesUpdateAt = 0;
+    const themeStorageKey = 'planningPokerTheme';
+
+    function getPreferredTheme() {
+      const savedTheme = localStorage.getItem(themeStorageKey);
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        return savedTheme;
+      }
+
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+
+    function applyTheme(theme) {
+      const normalizedTheme = theme === 'dark' ? 'dark' : 'light';
+      const toggle = document.getElementById('themeToggle');
+      const isDark = normalizedTheme === 'dark';
+
+      document.documentElement.setAttribute('data-bs-theme', normalizedTheme);
+      document.documentElement.setAttribute('data-theme', normalizedTheme);
+
+      if (toggle) {
+        toggle.title = isDark ? 'Switch to light mode' : 'Switch to dark mode';
+        toggle.setAttribute('aria-label', toggle.title);
+        toggle.innerHTML = `<i class="bi ${isDark ? 'bi-sun' : 'bi-moon-stars'}"></i>`;
+      }
+
+      applyChartTheme();
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || getPreferredTheme();
+      const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem(themeStorageKey, nextTheme);
+      applyTheme(nextTheme);
+    }
+
+    function getCssVariable(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    function getChartOptions() {
+      const textColor = getCssVariable('--app-text') || '#111827';
+      const gridColor = getCssVariable('--app-border-soft') || '#e3e6ea';
+
+      return {
+        scales: {
+          x: {
+            ticks: { color: textColor },
+            grid: { color: gridColor }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: textColor },
+            grid: { color: gridColor }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: { color: textColor }
+          }
+        }
+      };
+    }
+
+    function applyChartTheme() {
+      if (!window.Chart) return;
+
+      Chart.defaults.color = getCssVariable('--app-text') || '#111827';
+      Chart.defaults.borderColor = getCssVariable('--app-border-soft') || '#e3e6ea';
+
+      [averageChartInstance, diffChartInstance, voteLineChart].forEach(chart => {
+        if (!chart) return;
+        chart.options = getChartOptions();
+        chart.update();
+      });
+    }
+
+    applyTheme(getPreferredTheme());
 
     const estimationModel = {
       domains: {
@@ -640,7 +735,7 @@
             borderWidth: 1
           }]
         },
-        options: { scales: { y: { beginAtZero: true } } }
+        options: getChartOptions()
       });
     }
 
@@ -687,11 +782,14 @@
 
       socket.on('taskInfo', ({ taskId, taskDescription, users }) => {
         displayTaskDetails(taskId, taskDescription);
-        updateUserList(users);
+        if (Date.now() - lastVotesUpdateAt > 150) {
+          updateUserList(users);
+        }
         document.getElementById('voting').style.display = 'block';
       });
 
       socket.on('votesUpdate', (users, reveal, averageVote) => {
+        lastVotesUpdateAt = Date.now();
         displayVotes(users, reveal);
         document.getElementById('voteSuggestedPointBtn').disabled = !!reveal;
         if (reveal && averageVote !== undefined) {
@@ -898,80 +996,178 @@
       displayUsers(users, reveal);
     }
 
-    function getAvatarUrl(userKey) {
-      const avatarStyles = [
-        'bottts',
-        'pixel-art',
-        'identicon',
-        'adventurer',
-        'fun-emoji',
-        'thumbs',
-        'croodles',
-        'micah'
-      ];
+    const avatarStyles = [
+      'adventurer',
+      'adventurer-neutral',
+      'avataaars',
+      'big-ears',
+      'big-smile',
+      'bottts',
+      'croodles',
+      'fun-emoji',
+      'icons',
+      'identicon',
+      'initials',
+      'lorelei',
+      'micah',
+      'miniavs',
+      'notionists',
+      'open-peeps',
+      'personas',
+      'pixel-art',
+      'shapes',
+      'thumbs'
+    ];
 
+    const avatarCacheVersion = 'v2';
+
+    function hashString(value) {
       let hash = 0;
 
-      for (let i = 0; i < userKey.length; i++) {
-        hash = userKey.charCodeAt(i) + ((hash << 5) - hash);
+      for (let i = 0; i < value.length; i++) {
+        hash = value.charCodeAt(i) + ((hash << 5) - hash);
       }
 
-      const style =
-        avatarStyles[Math.abs(hash) % avatarStyles.length];
+      return Math.abs(hash);
+    }
 
-      return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(userKey)}`;
+    function getAvatarStyle(userKey, attempt = 0) {
+      const styleIndex = (hashString(userKey) + attempt) % avatarStyles.length;
+      return avatarStyles[styleIndex];
+    }
+
+    function getAvatarUrl(userKey, attempt = 0) {
+      const style = getAvatarStyle(userKey, attempt);
+      const taskSeed = currentTaskId || taskIdFromURL || 'planning';
+      const seed = `${taskSeed}-${userKey}`;
+      const params = new URLSearchParams({
+        seed,
+        radius: '50',
+        backgroundType: 'gradientLinear,solid',
+        cacheBust: `${avatarCacheVersion}-${taskSeed}-${userKey}`
+      });
+
+      return `https://api.dicebear.com/9.x/${style}/svg?${params.toString()}`;
+    }
+
+    function createAvatarFrame(userKey) {
+      const avatarFrame = document.createElement('div');
+      avatarFrame.className = 'avatar-frame';
+      avatarFrame.appendChild(createAvatarImage(userKey));
+      return avatarFrame;
+    }
+
+    function createAvatarImage(userKey) {
+      const img = document.createElement('img');
+      img.src = getAvatarUrl(userKey);
+      img.alt = userKey;
+      img.className = 'generated-avatar';
+      img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
+      img.dataset.avatarAttempt = '0';
+
+      img.addEventListener('error', () => {
+        const nextAttempt = Number(img.dataset.avatarAttempt || 0) + 1;
+        if (nextAttempt >= avatarStyles.length) return;
+
+        img.dataset.avatarAttempt = String(nextAttempt);
+        img.src = getAvatarUrl(userKey, nextAttempt);
+      });
+
+      return img;
     }
 
     function displayUsers(users, reveal) {
       const userAvatarsContainer = document.getElementById('userAvatars');
       userAvatarsContainer.innerHTML = '';
+      const isRevealMode = !!reveal;
+      const shouldAnimateReset = !isRevealMode && userDeckWasRevealed;
+      const cardsToReveal = [];
+      const cardsToReset = [];
 
-      for (const userKey in users) {
-        const user = users[userKey];
+      Object.entries(users).forEach(([userKey, user], index) => {
+        const userCard = document.createElement('div');
+        userCard.className = 'user-card' + (shouldAnimateReset ? ' is-revealed' : '');
+        userCard.style.setProperty('--reveal-delay', `${index * 70}ms`);
 
-        const userDiv = document.createElement('div');
-        userDiv.className = 'user-avatar';
+        const cardInner = document.createElement('div');
+        cardInner.className = 'user-card-inner';
 
-        const avatarCircle = document.createElement('div');
-        avatarCircle.className = 'avatar-circle';
-        
-        const avatarUrl = getAvatarUrl(userKey);
-        avatarCircle.innerHTML = `
-          <img
-            src="${avatarUrl}"
-            alt="${userKey}"
-            class="generated-avatar">
+        const cardFront = document.createElement('div');
+        cardFront.className = 'user-card-face user-card-front';
 
-          <div class="vote-overlay">
-            ${reveal ? user.point : '?'}
-          </div>
-        `;
+        const cardBack = document.createElement('div');
+        cardBack.className = 'user-card-face user-card-back';
 
         const statusIcon = document.createElement('div');
         statusIcon.className = 'status-icon';
         statusIcon.style.backgroundColor = user.voted ? 'green' : 'red';
 
-        avatarCircle.appendChild(statusIcon);
-
-        if (reveal && user.estimation) {
-          avatarCircle.setAttribute('tabindex', '0');
-          avatarCircle.setAttribute('role', 'button');
-          avatarCircle.setAttribute('data-bs-toggle', 'popover');
-          avatarCircle.setAttribute('data-bs-html', 'true');
-          avatarCircle.setAttribute('data-bs-trigger', 'hover focus');
-          avatarCircle.setAttribute('data-bs-placement', 'auto');
-          avatarCircle.setAttribute('title', `${userKey} - Estimation Details`);
-          avatarCircle.setAttribute('data-bs-content', buildEstimationPopoverContent(user.estimation));
-        }
+        const frontAvatarFrame = createAvatarFrame(userKey);
+        const backAvatarFrame = createAvatarFrame(userKey);
 
         const username = document.createElement('div');
         username.className = 'username';
         username.innerText = userKey;
 
-        userDiv.appendChild(avatarCircle);
-        userDiv.appendChild(username);
-        userAvatarsContainer.appendChild(userDiv);
+        const hiddenVote = document.createElement('div');
+        hiddenVote.className = 'hidden-vote ' + (user.voted ? 'is-ready' : 'is-waiting');
+        hiddenVote.innerText = user.voted ? 'Ready' : 'Waiting';
+
+        const revealedPoint = document.createElement('div');
+        revealedPoint.className = 'revealed-point';
+        revealedPoint.innerText = user.point ?? '-';
+
+        const backName = document.createElement('div');
+        backName.className = 'username card-back-name';
+        backName.innerText = userKey;
+
+        cardFront.appendChild(statusIcon);
+        cardFront.appendChild(frontAvatarFrame);
+        cardFront.appendChild(username);
+        cardFront.appendChild(hiddenVote);
+
+        cardBack.appendChild(revealedPoint);
+        cardBack.appendChild(backAvatarFrame);
+        cardBack.appendChild(backName);
+
+        if (isRevealMode && user.estimation) {
+          userCard.setAttribute('tabindex', '0');
+          userCard.setAttribute('role', 'button');
+          userCard.setAttribute('data-bs-toggle', 'popover');
+          userCard.setAttribute('data-bs-html', 'true');
+          userCard.setAttribute('data-bs-trigger', 'hover focus');
+          userCard.setAttribute('data-bs-placement', 'auto');
+          userCard.setAttribute('title', `${userKey} - Estimation Details`);
+          userCard.setAttribute('data-bs-content', buildEstimationPopoverContent(user.estimation));
+        }
+
+        cardInner.appendChild(cardFront);
+        cardInner.appendChild(cardBack);
+        userCard.appendChild(cardInner);
+        userAvatarsContainer.appendChild(userCard);
+
+        if (isRevealMode) {
+          cardsToReveal.push(userCard);
+        } else if (shouldAnimateReset) {
+          cardsToReset.push(userCard);
+        }
+      });
+
+      if (cardsToReveal.length) {
+        requestAnimationFrame(() => {
+          cardsToReveal.forEach(card => card.classList.add('is-revealed'));
+        });
       }
+
+      if (cardsToReset.length) {
+        void userAvatarsContainer.offsetHeight;
+        requestAnimationFrame(() => {
+          cardsToReset.forEach(card => card.classList.remove('is-revealed'));
+        });
+      }
+
+      userDeckWasRevealed = isRevealMode;
 
       initEstimationPopovers();
     }
@@ -1111,7 +1307,7 @@
             borderWidth: 1
           }]
         },
-        options: { scales: { y: { beginAtZero: true } } }
+        options: getChartOptions()
       });
 
       calculateDifference(users);
