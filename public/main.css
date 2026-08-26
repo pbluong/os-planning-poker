@@ -239,6 +239,23 @@ input[id="username"] { text-transform: uppercase; }
     0 8px 18px var(--app-card-shadow);
 }
 
+.voting-panel.is-locked .vote-card,
+.vote-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.vote-card:disabled:hover,
+.vote-card:disabled:focus-visible {
+  transform: none;
+  color: #1f2937;
+}
+
+[data-theme="dark"] .vote-card:disabled:hover,
+[data-theme="dark"] .vote-card:disabled:focus-visible {
+  color: #ffffff;
+}
+
 @media (max-width: 768px) {
   .app-header {
     align-items: flex-start !important;
