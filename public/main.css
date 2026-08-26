@@ -183,13 +183,17 @@ input[id="username"] { text-transform: uppercase; }
 
 .vote-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, 48px);
+  gap: 8px;
+  justify-content: start;
 }
 
 .vote-card {
-  aspect-ratio: 1 / 1;
-  min-height: 56px;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
   border-radius: 8px;
   --vote-color: var(--app-primary);
   --vote-bg: var(--app-surface-muted);
@@ -199,7 +203,7 @@ input[id="username"] { text-transform: uppercase; }
     linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.2)),
     var(--vote-bg);
   color: #1f2937;
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 800;
   box-shadow: 0 1px 2px var(--app-card-shadow);
 }
@@ -280,22 +284,30 @@ input[id="username"] { text-transform: uppercase; }
   }
 
   .vote-grid {
-    grid-template-columns: repeat(5, minmax(48px, 1fr));
+    grid-template-columns: repeat(auto-fill, 44px);
+    gap: 7px;
+  }
+
+  .vote-card {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 
 .user-avatar-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
+  gap: 10px;
   justify-content: center;
-  padding: 16px 12px 24px;
+  padding: 12px 8px 18px;
   perspective: 1200px;
 }
 
 .user-card {
-  width: 108px;
-  height: 142px;
+  width: 78px;
+  height: 104px;
   perspective: 900px;
   outline: none;
 }
@@ -330,8 +342,8 @@ input[id="username"] { text-transform: uppercase; }
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 12px 10px;
+  gap: 5px;
+  padding: 8px 6px;
   border: 1px solid var(--app-border);
   border-radius: 8px;
   background:
@@ -373,8 +385,8 @@ input[id="username"] { text-transform: uppercase; }
 
 .avatar-frame {
   position: relative;
-  width: 58px;
-  height: 58px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   background: var(--app-avatar-bg);
@@ -386,11 +398,11 @@ input[id="username"] { text-transform: uppercase; }
 }
 
 .hidden-vote {
-  min-width: 58px;
-  padding: 4px 8px;
+  min-width: 48px;
+  padding: 3px 6px;
   border-radius: 999px;
   border: 1px solid var(--app-border-soft);
-  font-size: 0.72rem;
+  font-size: 0.64rem;
   font-weight: 800;
   line-height: 1;
   z-index: 1;
@@ -420,8 +432,8 @@ input[id="username"] { text-transform: uppercase; }
   position: absolute;
   top: 10px;
   right: 10px;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background-color: green;
   border: 2px solid var(--app-avatar-ring);
@@ -429,10 +441,10 @@ input[id="username"] { text-transform: uppercase; }
 }
 
 .username {
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 800;
   color: var(--app-text);
-  max-width: 88px;
+  max-width: 66px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -443,13 +455,13 @@ input[id="username"] { text-transform: uppercase; }
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 62px;
-  height: 28px;
-  padding: 0 12px;
+  min-width: 44px;
+  height: 24px;
+  padding: 0 8px;
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.94);
   color: #0d47a1;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: 900;
   line-height: 1;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
@@ -458,7 +470,7 @@ input[id="username"] { text-transform: uppercase; }
 
 .card-back-name {
   color: #ffffff;
-  max-width: 88px;
+  max-width: 66px;
 }
 
 @media (prefers-reduced-motion: reduce) {
