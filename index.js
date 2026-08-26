@@ -54,6 +54,14 @@ function sanitizeArray(value) {
   return Array.isArray(value) ? value.slice(0, 100) : [];
 }
 
+function calculateAverageVote(votes) {
+  const voteValues = Object.values(votes);
+  if (voteValues.length === 0) return 0;
+
+  const totalVotes = voteValues.reduce((acc, vote) => acc + vote, 0);
+  return totalVotes / voteValues.length;
+}
+
 app.get('/getTaskInfo', (req, res) => {
   const taskId = req.query.taskId;
   // Find task details based on taskId (example only, use your actual data source)
@@ -74,6 +82,7 @@ io.on('connection', (socket) => {
       sessions[taskId] = {
         taskDescription,
         host: user,
+        revealed: false,
         votes: {},
         users: { [user]: createUserState() }
       };
@@ -110,12 +119,21 @@ io.on('connection', (socket) => {
     // Notify all clients in the session about the updated user list
     io.to(taskId).emit('userListUpdate', sessions[taskId].users);
 
-    io.to(taskId).emit('votesUpdate', sessions[taskId].users, false);
+    io.to(taskId).emit(
+      'votesUpdate',
+      sessions[taskId].users,
+      sessions[taskId].revealed,
+      calculateAverageVote(sessions[taskId].votes)
+    );
   });
 
   // Handle vote casting, reveal, and reset as previously described
   socket.on('castVote', ({ taskId, user, vote, estimation }) => {
     if (!sessions[taskId]) return;
+    if (sessions[taskId].revealed) {
+      socket.emit('votesLocked');
+      return;
+    }
 
     if (!sessions[taskId].users[user]) {
       sessions[taskId].users[user] = createUserState();
@@ -138,13 +156,9 @@ io.on('connection', (socket) => {
 
   socket.on('revealVotes', (taskId) => {
     if (sessions[taskId]) {
-      // Get all votes for the task session
-      const votes = sessions[taskId].votes;
-      
-      // Calculate the average vote
-      const totalVotes = Object.values(votes).reduce((acc, vote) => acc + vote, 0);
-      const averageVote = totalVotes / Object.keys(votes).length;
-  
+      sessions[taskId].revealed = true;
+      const averageVote = calculateAverageVote(sessions[taskId].votes);
+
       // Emit the votes and average vote to all users (including the host)
       io.to(taskId).emit('votesUpdate', sessions[taskId].users, true, averageVote);
     }
@@ -153,6 +167,7 @@ io.on('connection', (socket) => {
   socket.on('resetVotes', (taskId) => {
     if (sessions[taskId]) {
       sessions[taskId].votes = {};
+      sessions[taskId].revealed = false;
 
       for (let user in sessions[taskId].users) {
         sessions[taskId].users[user].voted = false;

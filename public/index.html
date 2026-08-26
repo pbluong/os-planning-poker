@@ -170,6 +170,7 @@
     let currentSuggestedStoryPoint = null;
     let currentRevealedUsers = null;
     let currentAverageVote = null;
+    let currentVotesRevealed = false;
     let userDeckWasRevealed = false;
     let lastVotesUpdateAt = 0;
     const themeStorageKey = 'planningPokerTheme';
@@ -529,6 +530,10 @@
     }
 
     function voteSuggestedPoint() {
+      if (currentVotesRevealed) {
+        return;
+      }
+
       if (currentSuggestedStoryPoint === null) {
         alert('Please fill the estimation calculator first.');
         return;
@@ -538,7 +543,9 @@
 
     function resetEstimationForm() {
 
-        resetVoteButtons();
+        if (!currentVotesRevealed) {
+          resetVoteButtons();
+        }
 
         document.querySelectorAll('.technical-domain-checkbox').forEach(input => {
           input.checked = false;
@@ -768,6 +775,7 @@
       socket.off('shareLink');
       socket.off('taskInfo');
       socket.off('votesUpdate');
+      socket.off('votesLocked');
 
       socket.off('resetAllVotes');
 
@@ -790,8 +798,9 @@
 
       socket.on('votesUpdate', (users, reveal, averageVote) => {
         lastVotesUpdateAt = Date.now();
+        currentVotesRevealed = !!reveal;
         displayVotes(users, reveal);
-        document.getElementById('voteSuggestedPointBtn').disabled = !!reveal;
+        updateVoteControlsLocked(currentVotesRevealed);
         if (reveal && averageVote !== undefined) {
           currentRevealedUsers = users;
           currentAverageVote = averageVote;
@@ -808,12 +817,23 @@
         }
       });
 
+      socket.on('votesLocked', () => {
+        currentVotesRevealed = true;
+        updateVoteControlsLocked(true);
+      });
+
       socket.on('resetAllVotes', (taskId) => {
+        currentVotesRevealed = false;
+        updateVoteControlsLocked(false);
         resetEstimationForm();
       });
     }
 
     function castVote(vote) {
+      if (currentVotesRevealed) {
+        return;
+      }
+
       const user = document.getElementById('username').value.toUpperCase();
 
       socket.emit('castVote', {
@@ -834,6 +854,22 @@
     function resetVoteButtons() {
       const voteButtons = document.querySelectorAll('#voting .btn');
       voteButtons.forEach(button => button.classList.remove('selected-vote'));
+    }
+
+    function updateVoteControlsLocked(isLocked) {
+      document.querySelectorAll('#voting .vote-card').forEach(button => {
+        button.disabled = isLocked;
+      });
+
+      const suggestedVoteButton = document.getElementById('voteSuggestedPointBtn');
+      if (suggestedVoteButton) {
+        suggestedVoteButton.disabled = isLocked;
+      }
+
+      const votingPanel = document.getElementById('voting');
+      if (votingPanel) {
+        votingPanel.classList.toggle('is-locked', isLocked);
+      }
     }
 
     function collectEstimationDetails(vote) {
@@ -951,6 +987,8 @@
     function revealVotes() { socket.emit('revealVotes', currentTaskId); }
 
     function resetVotes() {
+      currentVotesRevealed = false;
+      updateVoteControlsLocked(false);
       socket.emit('resetVotes', currentTaskId);
       resetCharts();
       resetEstimationForm();
