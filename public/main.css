@@ -159,11 +159,16 @@ input[id="username"] { text-transform: uppercase; }
 }
 
 .voting-panel {
-  border: 1px solid #1d2a3f;
+  border: 1px solid var(--app-border);
   border-radius: 8px;
-  background: #0f1624;
+  background: var(--app-surface);
   box-shadow: 0 2px 8px var(--app-card-shadow);
-  padding: 14px;
+  padding: 18px;
+}
+
+[data-theme="dark"] .voting-panel {
+  border-color: #1d2a3f;
+  background: #0f1624;
 }
 
 .voting-header {
@@ -184,22 +189,20 @@ input[id="username"] { text-transform: uppercase; }
 }
 
 .vote-grid {
-  --vote-card-width: clamp(34px, calc(10% - 7.2px), 72px);
-  --vote-card-gap: clamp(4px, 1vw, 8px);
+  --vote-card-width: clamp(56px, 8vw, 72px);
+  --vote-card-gap: clamp(10px, 1.35vw, 14px);
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: var(--vote-card-gap);
   justify-content: center;
-  overflow-x: auto;
   overflow-y: visible;
-  padding: 12px 2px 18px;
-  scrollbar-width: thin;
+  padding: 14px 0 8px;
 }
 
 .vote-card {
   position: relative;
   width: var(--vote-card-width);
-  height: calc(var(--vote-card-width) * 1.44);
+  height: calc(var(--vote-card-width) * 1.5);
   min-width: var(--vote-card-width);
   flex: 0 0 var(--vote-card-width);
   display: inline-flex;
@@ -208,10 +211,10 @@ input[id="username"] { text-transform: uppercase; }
   padding: 0;
   border-radius: clamp(7px, 1.2vw, 10px);
   --vote-color: #78c7ff;
-  --vote-bg: rgba(31, 48, 68, 0.72);
+  --vote-bg: color-mix(in srgb, var(--vote-color) 13%, var(--app-surface));
   --vote-border: rgba(120, 199, 255, 0.36);
   border-color: var(--vote-border);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)), var(--vote-bg);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0)), var(--vote-bg);
   color: var(--vote-color);
   font-size: clamp(1rem, 3vw, 1.75rem);
   font-weight: 800;
@@ -226,16 +229,53 @@ input[id="username"] { text-transform: uppercase; }
     background-color 0.16s ease;
 }
 
-.vote-card-0 { --vote-color: #78c7ff; --vote-bg: rgba(22, 42, 64, 0.76); --vote-border: rgba(120, 199, 255, 0.38); }
-.vote-card-1 { --vote-color: #65d8b4; --vote-bg: rgba(18, 51, 47, 0.72); --vote-border: rgba(101, 216, 180, 0.36); }
-.vote-card-2 { --vote-color: #72db6d; --vote-bg: rgba(26, 55, 31, 0.72); --vote-border: rgba(114, 219, 109, 0.36); }
-.vote-card-3 { --vote-color: #b8d75c; --vote-bg: rgba(45, 54, 23, 0.72); --vote-border: rgba(184, 215, 92, 0.36); }
-.vote-card-5 { --vote-color: #e4bf63; --vote-bg: rgba(58, 47, 18, 0.72); --vote-border: rgba(228, 191, 99, 0.38); }
-.vote-card-8 { --vote-color: #df9166; --vote-bg: rgba(59, 36, 23, 0.74); --vote-border: rgba(223, 145, 102, 0.38); }
-.vote-card-13 { --vote-color: #f06e74; --vote-bg: rgba(59, 26, 29, 0.75); --vote-border: rgba(240, 110, 116, 0.38); }
-.vote-card-21 { --vote-color: #df679d; --vote-bg: rgba(57, 24, 42, 0.75); --vote-border: rgba(223, 103, 157, 0.38); }
-.vote-card-34 { --vote-color: #b66ce7; --vote-bg: rgba(47, 25, 59, 0.75); --vote-border: rgba(182, 108, 231, 0.38); }
-.vote-card-55 { --vote-color: #8f7df4; --vote-bg: rgba(32, 29, 64, 0.75); --vote-border: rgba(143, 125, 244, 0.38); }
+[data-theme="dark"] .vote-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)), var(--vote-bg);
+}
+
+.vote-card::before,
+.vote-card::after {
+  content: attr(data-suit);
+  position: absolute;
+  color: var(--vote-color);
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  opacity: 0.72;
+}
+
+.vote-card::before {
+  top: 9px;
+  left: 10px;
+}
+
+.vote-card::after {
+  right: 10px;
+  bottom: 9px;
+  transform: rotate(180deg);
+}
+
+.vote-card-0 { --vote-color: #3f9edb; --vote-border: rgba(63, 158, 219, 0.48); }
+.vote-card-1 { --vote-color: #27b899; --vote-border: rgba(39, 184, 153, 0.42); }
+.vote-card-2 { --vote-color: #51b94d; --vote-border: rgba(81, 185, 77, 0.42); }
+.vote-card-3 { --vote-color: #93b83c; --vote-border: rgba(147, 184, 60, 0.42); }
+.vote-card-5 { --vote-color: #c79b2c; --vote-border: rgba(199, 155, 44, 0.46); }
+.vote-card-8 { --vote-color: #d07845; --vote-border: rgba(208, 120, 69, 0.46); }
+.vote-card-13 { --vote-color: #de555f; --vote-border: rgba(222, 85, 95, 0.46); }
+.vote-card-21 { --vote-color: #cf4f87; --vote-border: rgba(207, 79, 135, 0.46); }
+.vote-card-34 { --vote-color: #a45eda; --vote-border: rgba(164, 94, 218, 0.46); }
+.vote-card-55 { --vote-color: #7668dd; --vote-border: rgba(118, 104, 221, 0.46); }
+
+[data-theme="dark"] .vote-card-0 { --vote-color: #78c7ff; --vote-bg: rgba(22, 42, 64, 0.76); --vote-border: rgba(120, 199, 255, 0.38); }
+[data-theme="dark"] .vote-card-1 { --vote-color: #65d8b4; --vote-bg: rgba(18, 51, 47, 0.72); --vote-border: rgba(101, 216, 180, 0.36); }
+[data-theme="dark"] .vote-card-2 { --vote-color: #72db6d; --vote-bg: rgba(26, 55, 31, 0.72); --vote-border: rgba(114, 219, 109, 0.36); }
+[data-theme="dark"] .vote-card-3 { --vote-color: #b8d75c; --vote-bg: rgba(45, 54, 23, 0.72); --vote-border: rgba(184, 215, 92, 0.36); }
+[data-theme="dark"] .vote-card-5 { --vote-color: #e4bf63; --vote-bg: rgba(58, 47, 18, 0.72); --vote-border: rgba(228, 191, 99, 0.38); }
+[data-theme="dark"] .vote-card-8 { --vote-color: #df9166; --vote-bg: rgba(59, 36, 23, 0.74); --vote-border: rgba(223, 145, 102, 0.38); }
+[data-theme="dark"] .vote-card-13 { --vote-color: #f06e74; --vote-bg: rgba(59, 26, 29, 0.75); --vote-border: rgba(240, 110, 116, 0.38); }
+[data-theme="dark"] .vote-card-21 { --vote-color: #df679d; --vote-bg: rgba(57, 24, 42, 0.75); --vote-border: rgba(223, 103, 157, 0.38); }
+[data-theme="dark"] .vote-card-34 { --vote-color: #b66ce7; --vote-bg: rgba(47, 25, 59, 0.75); --vote-border: rgba(182, 108, 231, 0.38); }
+[data-theme="dark"] .vote-card-55 { --vote-color: #8f7df4; --vote-bg: rgba(32, 29, 64, 0.75); --vote-border: rgba(143, 125, 244, 0.38); }
 
 .vote-card:hover,
 .vote-card:focus-visible {
@@ -299,8 +339,8 @@ input[id="username"] { text-transform: uppercase; }
   }
 
   .vote-grid {
-    --vote-card-width: clamp(30px, calc(10% - 3.6px), 52px);
-    --vote-card-gap: 4px;
+    --vote-card-width: clamp(44px, 15vw, 56px);
+    --vote-card-gap: 8px;
   }
 }
 
