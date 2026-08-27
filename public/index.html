@@ -91,20 +91,19 @@
 
         <div id="voting" class="voting-panel mt-3" style="display: none;">
           <div class="voting-header">
-            <span>Story Points</span>
-            <i class="bi bi-check2-circle"></i>
+            <span>Story points - pick a card</span>
           </div>
           <div class="vote-grid" role="group" aria-label="Story point vote">
-            <button onclick="castVote(0)" class="btn vote-card vote-card-0 btn-outline-primary" value="0">0</button>
-            <button onclick="castVote(1)" class="btn vote-card vote-card-1 btn-outline-primary" value="1">1</button>
-            <button onclick="castVote(2)" class="btn vote-card vote-card-2 btn-outline-primary" value="2">2</button>
-            <button onclick="castVote(3)" class="btn vote-card vote-card-3 btn-outline-primary" value="3">3</button>
-            <button onclick="castVote(5)" class="btn vote-card vote-card-5 btn-outline-primary" value="5">5</button>
-            <button onclick="castVote(8)" class="btn vote-card vote-card-8 btn-outline-primary" value="8">8</button>
-            <button onclick="castVote(13)" class="btn vote-card vote-card-13 btn-outline-primary" value="13">13</button>
-            <button onclick="castVote(21)" class="btn vote-card vote-card-21 btn-outline-primary" value="21">21</button>
-            <button onclick="castVote(34)" class="btn vote-card vote-card-34 btn-outline-primary" value="34">34</button>
-            <button onclick="castVote(55)" class="btn vote-card vote-card-55 btn-outline-primary" value="55">55</button>
+            <button onclick="castVote(0)" class="btn vote-card vote-card-0 btn-outline-primary" value="0" data-suit="♠">0</button>
+            <button onclick="castVote(1)" class="btn vote-card vote-card-1 btn-outline-primary" value="1" data-suit="♥">1</button>
+            <button onclick="castVote(2)" class="btn vote-card vote-card-2 btn-outline-primary" value="2" data-suit="♦">2</button>
+            <button onclick="castVote(3)" class="btn vote-card vote-card-3 btn-outline-primary" value="3" data-suit="♣">3</button>
+            <button onclick="castVote(5)" class="btn vote-card vote-card-5 btn-outline-primary" value="5" data-suit="♠">5</button>
+            <button onclick="castVote(8)" class="btn vote-card vote-card-8 btn-outline-primary" value="8" data-suit="♥">8</button>
+            <button onclick="castVote(13)" class="btn vote-card vote-card-13 btn-outline-primary" value="13" data-suit="♦">13</button>
+            <button onclick="castVote(21)" class="btn vote-card vote-card-21 btn-outline-primary" value="21" data-suit="♣">21</button>
+            <button onclick="castVote(34)" class="btn vote-card vote-card-34 btn-outline-primary" value="34" data-suit="♠">34</button>
+            <button onclick="castVote(55)" class="btn vote-card vote-card-55 btn-outline-primary" value="55" data-suit="♥">55</button>
           </div>
         </div>
 
