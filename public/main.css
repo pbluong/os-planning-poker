@@ -184,19 +184,24 @@ input[id="username"] { text-transform: uppercase; }
 }
 
 .vote-grid {
-  --vote-card-size: clamp(22px, calc(10% - 7.2px), 48px);
+  --vote-card-width: clamp(34px, calc(10% - 7.2px), 72px);
   --vote-card-gap: clamp(4px, 1vw, 8px);
-  display: grid;
-  grid-template-columns: repeat(10, var(--vote-card-size));
+  display: flex;
+  flex-wrap: nowrap;
   gap: var(--vote-card-gap);
   justify-content: center;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 12px 2px 18px;
+  scrollbar-width: thin;
 }
 
 .vote-card {
   position: relative;
-  width: var(--vote-card-size);
-  aspect-ratio: 2 / 3;
-  min-width: var(--vote-card-size);
+  width: var(--vote-card-width);
+  height: calc(var(--vote-card-width) * 1.44);
+  min-width: var(--vote-card-width);
+  flex: 0 0 var(--vote-card-width);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -208,7 +213,7 @@ input[id="username"] { text-transform: uppercase; }
   border-color: var(--vote-border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)), var(--vote-bg);
   color: var(--vote-color);
-  font-size: clamp(0.9rem, 3vw, 1.55rem);
+  font-size: clamp(1rem, 3vw, 1.75rem);
   font-weight: 800;
   line-height: 1;
   box-shadow:
@@ -219,32 +224,6 @@ input[id="username"] { text-transform: uppercase; }
     border-color 0.16s ease,
     box-shadow 0.16s ease,
     background-color 0.16s ease;
-}
-
-[data-theme="dark"] .vote-card {
-  color: var(--vote-color);
-}
-
-.vote-card::before,
-.vote-card::after {
-  content: attr(data-suit);
-  position: absolute;
-  color: var(--vote-color);
-  font-size: clamp(0.5rem, 1.5vw, 0.68rem);
-  font-weight: 800;
-  line-height: 1;
-  opacity: 0.78;
-}
-
-.vote-card::before {
-  top: 8%;
-  left: 11%;
-}
-
-.vote-card::after {
-  right: 11%;
-  bottom: 8%;
-  transform: rotate(180deg);
 }
 
 .vote-card-0 { --vote-color: #78c7ff; --vote-bg: rgba(22, 42, 64, 0.76); --vote-border: rgba(120, 199, 255, 0.38); }
@@ -263,7 +242,7 @@ input[id="username"] { text-transform: uppercase; }
   border-color: var(--vote-color);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0)), var(--vote-bg);
   color: var(--vote-color);
-  transform: translateY(-12px);
+  transform: translateY(-10px);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--vote-color) 32%, transparent),
     0 18px 30px rgba(0, 0, 0, 0.26);
@@ -273,7 +252,7 @@ input[id="username"] { text-transform: uppercase; }
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0)), var(--vote-bg);
   border-color: var(--vote-color);
   color: var(--vote-color);
-  transform: translateY(-12px);
+  transform: translateY(-10px);
   box-shadow:
     0 0 0 2px color-mix(in srgb, var(--vote-color) 52%, transparent),
     0 18px 30px rgba(0, 0, 0, 0.26);
@@ -320,7 +299,7 @@ input[id="username"] { text-transform: uppercase; }
   }
 
   .vote-grid {
-    --vote-card-size: clamp(20px, calc(10% - 3.6px), 44px);
+    --vote-card-width: clamp(30px, calc(10% - 3.6px), 52px);
     --vote-card-gap: 4px;
   }
 }
