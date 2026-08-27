@@ -189,22 +189,21 @@ input[id="username"] { text-transform: uppercase; }
 }
 
 .vote-grid {
-  --vote-card-width: clamp(56px, 8vw, 72px);
-  --vote-card-gap: clamp(10px, 1.35vw, 14px);
-  display: flex;
-  flex-wrap: wrap;
+  --vote-card-gap: clamp(4px, 0.8vw, 8px);
+  --vote-card-max-width: 56px;
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, var(--vote-card-max-width)));
   gap: var(--vote-card-gap);
   justify-content: center;
   overflow-y: visible;
-  padding: 14px 0 8px;
+  padding: 14px 0 12px;
 }
 
 .vote-card {
   position: relative;
-  width: var(--vote-card-width);
-  height: calc(var(--vote-card-width) * 1.5);
-  min-width: var(--vote-card-width);
-  flex: 0 0 var(--vote-card-width);
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 2 / 3;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -216,7 +215,7 @@ input[id="username"] { text-transform: uppercase; }
   border-color: var(--vote-border);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0)), var(--vote-bg);
   color: var(--vote-color);
-  font-size: clamp(1rem, 3vw, 1.75rem);
+  font-size: clamp(0.78rem, 3.5vw, 1.45rem);
   font-weight: 800;
   line-height: 1;
   box-shadow:
@@ -238,20 +237,20 @@ input[id="username"] { text-transform: uppercase; }
   content: attr(data-suit);
   position: absolute;
   color: var(--vote-color);
-  font-size: 0.62rem;
+  font-size: clamp(0.42rem, 1.5vw, 0.62rem);
   font-weight: 800;
   line-height: 1;
   opacity: 0.72;
 }
 
 .vote-card::before {
-  top: 9px;
-  left: 10px;
+  top: 9%;
+  left: 12%;
 }
 
 .vote-card::after {
-  right: 10px;
-  bottom: 9px;
+  right: 12%;
+  bottom: 9%;
   transform: rotate(180deg);
 }
 
@@ -339,8 +338,8 @@ input[id="username"] { text-transform: uppercase; }
   }
 
   .vote-grid {
-    --vote-card-width: clamp(44px, 15vw, 56px);
-    --vote-card-gap: 8px;
+    --vote-card-gap: 4px;
+    --vote-card-max-width: 44px;
   }
 }
 
