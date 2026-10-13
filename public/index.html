@@ -1058,6 +1058,16 @@
 
     const avatarCacheVersion = 'v2';
 
+    const animalAvatars = ['🐶', '🐱', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐰', '🐸', '🐵', '🐧', '🦉', '🦄', '🐙', '🐢'];
+
+    function getAnimalAvatarUrl(userKey) {
+      const animal = animalAvatars[hashString(`animal-${userKey}`) % animalAvatars.length];
+      const backgrounds = ['#ffedd5', '#dcfce7', '#dbeafe', '#fce7f3', '#ede9fe'];
+      const background = backgrounds[hashString(userKey) % backgrounds.length];
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" rx="40" fill="${background}"/><text x="40" y="43" text-anchor="middle" dominant-baseline="middle" font-size="48" font-family="Segoe UI Emoji, Apple Color Emoji, Noto Color Emoji, sans-serif">${animal}</text></svg>`;
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    }
+
     function hashString(value) {
       let hash = 0;
 
@@ -1074,6 +1084,10 @@
     }
 
     function getAvatarUrl(userKey, attempt = 0) {
+      // Keep the existing style assignment while adding animals for some users.
+      if (attempt === 0 && hashString(`animal-choice-${userKey}`) % 3 === 0) {
+        return getAnimalAvatarUrl(userKey);
+      }
       const style = getAvatarStyle(userKey, attempt);
       const taskSeed = currentTaskId || taskIdFromURL || 'planning';
       const seed = `${taskSeed}-${userKey}`;
@@ -1135,6 +1149,15 @@
 
         const cardBack = document.createElement('div');
         cardBack.className = 'user-card-face user-card-back';
+
+        if (user.voted) {
+          const revealedCheck = document.createElement('span');
+          revealedCheck.className = 'revealed-check';
+          revealedCheck.innerText = '✓';
+          revealedCheck.setAttribute('role', 'img');
+          revealedCheck.setAttribute('aria-label', 'Vote submitted');
+          cardBack.appendChild(revealedCheck);
+        }
 
         const statusIcon = document.createElement('div');
         statusIcon.className = 'status-icon';
