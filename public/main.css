@@ -424,18 +424,6 @@ input[id="username"] { text-transform: uppercase; }
 .user-card-back {
   transform: rotateY(180deg);
   -webkit-transform: rotateY(180deg);
-  background:
-    linear-gradient(135deg, var(--app-primary), #4c93df);
-  border-color: var(--app-primary);
-  color: #ffffff;
-}
-
-.user-card-back .avatar-frame {
-  border-color: rgba(255, 255, 255, 0.9);
-  background: #ffffff;
-  box-shadow:
-    0 6px 16px rgba(0, 0, 0, 0.18),
-    0 0 0 1px rgba(255, 255, 255, 0.35);
 }
 
 .avatar-frame {
@@ -514,17 +502,17 @@ input[id="username"] { text-transform: uppercase; }
   height: 24px;
   padding: 0 8px;
   border-radius: 7px;
-  background: rgba(255, 255, 255, 0.94);
-  color: #0d47a1;
+  background: var(--app-surface-muted);
+  border: 1px solid var(--app-border-soft);
+  color: var(--app-text);
   font-size: 1rem;
   font-weight: 900;
   line-height: 1;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 4px var(--app-card-shadow);
   z-index: 1;
 }
 
 .card-back-name {
-  color: #ffffff;
   max-width: 66px;
 }
 
