@@ -1057,7 +1057,7 @@
       'thumbs'
     ];
 
-    const visaAvatars = new Set(["CAON","DOMH","NHK","NNTG","NUYC","NUYY","PAMT","PANO","PANR","PBL","THAR","VTBL"]);
+    const visaAvatars = new Set(["CAON","DOMH","HHH","MNA","NHK","NNTG","NUYC","NUYY","PAMT","PANO","PANR","PBL","THAR","VLP","VTBL"]);
 
     const avatarCacheVersion = 'v2';
 
@@ -1108,11 +1108,11 @@
       return `https://api.dicebear.com/9.x/${style}/svg?${params.toString()}`;
     }
 
-    function createAvatarFrame(userKey) {
+    function createAvatarFrame(userKey, previewEnabled = true) {
       const avatarFrame = document.createElement('div');
       avatarFrame.className = 'avatar-frame';
       avatarFrame.appendChild(createAvatarImage(userKey));
-      enableAvatarPreview(avatarFrame, userKey);
+      if (previewEnabled) enableAvatarPreview(avatarFrame, userKey);
       return avatarFrame;
     }
 
@@ -1140,13 +1140,21 @@
       const userAvatarsContainer = document.getElementById('userAvatars');
       userAvatarsContainer.innerHTML = '';
       const isRevealMode = !!reveal;
+      if (isRevealMode) closeAvatarPreview();
       const shouldAnimateReset = !isRevealMode && userDeckWasRevealed;
+      const highestPoint = Math.max(0, ...Object.values(users).filter(user => user.voted).map(user => Number(user.point) || 0));
       const cardsToReveal = [];
       const cardsToReset = [];
 
       Object.entries(users).forEach(([userKey, user], index) => {
         const userCard = document.createElement('div');
         userCard.className = 'user-card' + (shouldAnimateReset ? ' is-revealed' : '');
+        const isZeroOrMissing = !user.voted || Number(user.point) === 0;
+        const isHighest = user.voted && highestPoint > 0 && Number(user.point) === highestPoint;
+        if (isRevealMode) {
+          userCard.classList.toggle('has-highest-vote', isHighest);
+          userCard.classList.toggle('has-zero-vote', isZeroOrMissing);
+        }
         userCard.style.setProperty('--reveal-delay', `${index * 70}ms`);
 
         const cardInner = document.createElement('div');
@@ -1158,12 +1166,14 @@
         const cardBack = document.createElement('div');
         cardBack.className = 'user-card-face user-card-back';
 
-        if (user.voted) {
+        if (user.voted || isRevealMode) {
           const revealedCheck = document.createElement('span');
           revealedCheck.className = 'revealed-check';
-          revealedCheck.innerText = '✓';
+          revealedCheck.innerText = isZeroOrMissing ? '−' : (isHighest ? '★' : '✓');
           revealedCheck.setAttribute('role', 'img');
-          revealedCheck.setAttribute('aria-label', 'Vote submitted');
+          const voteLabel = !user.voted ? 'No vote submitted' : (isZeroOrMissing ? 'Zero points' : (isHighest ? 'Highest vote' : 'Vote submitted'));
+          revealedCheck.setAttribute('aria-label', voteLabel);
+          revealedCheck.title = voteLabel;
           cardBack.appendChild(revealedCheck);
         }
 
@@ -1171,8 +1181,8 @@
         statusIcon.className = 'status-icon';
         statusIcon.style.backgroundColor = user.voted ? 'green' : 'red';
 
-        const frontAvatarFrame = createAvatarFrame(userKey);
-        const backAvatarFrame = createAvatarFrame(userKey);
+        const frontAvatarFrame = createAvatarFrame(userKey, !isRevealMode);
+        const backAvatarFrame = createAvatarFrame(userKey, !isRevealMode);
 
         const username = document.createElement('div');
         username.className = 'username';

@@ -34,6 +34,11 @@
   });
   new MutationObserver(hide).observe(document.getElementById('userAvatars'), { childList: true });
 
+  window.closeAvatarPreview = () => {
+    hide();
+    if (dialog.open) dialog.close();
+  };
+
   window.enableAvatarPreview = (frame, userKey) => {
     frame.tabIndex = 0;
     frame.setAttribute('role', 'button');

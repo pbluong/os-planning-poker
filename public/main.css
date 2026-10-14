@@ -444,6 +444,26 @@ input[id="username"] { text-transform: uppercase; }
   z-index: 2;
 }
 
+.has-highest-vote .user-card-back {
+  border: 2px solid #d6a12a;
+  background: linear-gradient(135deg, rgba(214, 161, 42, 0.16), transparent), var(--app-surface);
+  box-shadow: 0 0 0 2px rgba(214, 161, 42, 0.25), 0 6px 18px var(--app-card-shadow);
+}
+.has-highest-vote .revealed-check { background: #946200; }
+.has-highest-vote .revealed-point { border-color: #d6a12a; }
+
+.has-zero-vote .user-card-back {
+  border-style: dashed;
+  background: var(--app-surface-muted);
+}
+.has-zero-vote .revealed-check {
+  background: var(--app-surface);
+  color: var(--app-text);
+  border: 1px solid var(--app-border);
+}
+.has-zero-vote .avatar-frame { filter: grayscale(1); opacity: 0.65; }
+.has-zero-vote .revealed-point { border-style: dashed; }
+
 .avatar-frame {
   position: relative;
   width: 40px;
