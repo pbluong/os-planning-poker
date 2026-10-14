@@ -1056,6 +1056,8 @@
       'thumbs'
     ];
 
+    const visaAvatars = new Set(["CAON","DOMH","NHK","NUYC","NUYY","PAMT","PANO","PANR","PBL","THAR","VTBL"]);
+
     const avatarCacheVersion = 'v2';
 
     const animalAvatars = ['🐶', '🐱', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐰', '🐸', '🐵', '🐧', '🦉', '🦄', '🐙', '🐢'];
@@ -1084,6 +1086,10 @@
     }
 
     function getAvatarUrl(userKey, attempt = 0) {
+      const visa = userKey.trim().toUpperCase();
+      if (attempt === 0 && visaAvatars.has(visa)) {
+        return '/avatars/visa/' + visa + '-caricature.png';
+      }
       // Keep the existing style assignment while adding animals for some users.
       if (attempt === 0 && hashString(`animal-choice-${userKey}`) % 3 === 0) {
         return getAnimalAvatarUrl(userKey);
