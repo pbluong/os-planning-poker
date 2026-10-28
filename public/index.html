@@ -13,21 +13,17 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
   <link href="/main.css" rel="stylesheet">
+  <script src="/session-controls.js" defer></script>
+  <script src="/header-session.js" defer></script>
+  <link href="/header.css" rel="stylesheet">
 
-  <style>
-    
-  </style>
 </head>
 <body>
   <div class="container mt-3">
 
-    <div class="app-header d-flex align-items-center justify-content-center mt-2">
+    <header class="app-header">
       <img src="/secutix-logo.png" alt="SecuTix" class="secutix-logo">
-      <div class="app-brand d-flex align-items-center justify-content-center">
-        <img src="/logo.png" alt="Logo" class="logo-img" width="36">
-        <h1 class="app-title">Planning Poker - SALES PORTALS</h1>
-        <img src="/logo.png" alt="Logo" class="logo-img" width="36">
-      </div>
+      <span class="app-workspace">Sales Portals</span>
       <button
           type="button"
           id="themeToggle"
@@ -37,27 +33,71 @@
           aria-label="Switch to dark mode">
         <i class="bi bi-moon-stars"></i>
       </button>
+    </header>
+
+    <section class="planning-hero" aria-labelledby="planningTitle">
+      <div class="planning-hero-copy">
+        <p class="hero-eyebrow" id="heroSessionStatus">Start or join a session</p>
+        <div class="hero-heading">
+          <span class="hero-suit" aria-hidden="true">♠</span>
+          <div>
+            <p class="hero-kicker">Planning Poker</p>
+            <h1 id="planningTitle" class="app-title">Sales Portals</h1>
+          </div>
+        </div>
+        <p class="hero-description">Estimate together, align faster, and turn discussion into a clear team decision.</p>
+        <div class="hero-session-form" role="group" aria-label="Start or join a planning session">
+        <div id="activeSessionSummary" class="active-session-summary" hidden>
+          <div class="session-summary-top"><span class="session-summary-icon" aria-hidden="true">♠</span><div><span id="heroSessionNumber" class="session-summary-label">Session</span><strong id="sessionIdentity"></strong></div><span id="sessionRole" class="session-role"></span></div>
+          <div class="hero-participants"><div id="heroParticipantAvatars" class="hero-participant-avatars" aria-hidden="true"></div><span id="heroParticipantCount">No participants yet</span></div>
+      <div id="roundReadiness" class="round-readiness" role="status">
+        <span id="roundReadinessIcon" class="round-readiness-icon" aria-hidden="true">○</span>
+        <div><strong id="roundReadinessTitle">Ready when you are</strong><p id="roundReadinessText">Start or join a session to begin.</p></div>
+        <span id="roundReadinessBadge" class="guide-step-count">Next up</span>
+      </div>
+
+          <progress id="sessionProgress" max="1" value="0" aria-label="Submitted votes"></progress>
+        </div>
+        <input id="username" aria-label="Your name or VISA" type="text" maxlength="6" class="form-control mb-2" placeholder="Your Name or VISA">
+        <input id="taskId" aria-label="Task ID" type="number" class="form-control mb-2" placeholder="Task ID">
+        <input id="taskDescription" aria-label="Task description" maxlength="80" class="form-control mb-2" placeholder="STIX-XXX or Task Description">
+        <div class="d-grid gap-2">
+          <button onclick="startTask()" id="startTaskButton" class="btn btn-primary">Start a Task</button>
+          <button onclick="joinTask()" id="joinTaskButton" class="btn btn-secondary">Join a Task</button>
+          <button onclick="leaveCurrentSession()" id="newSessionButton" class="btn btn-outline-primary" hidden>Start or join new session</button>
+        </div>
+        </div>
+        <div class="hero-session-actions">
+          <div id="taskDetails" class="hero-task" hidden>Please start or join a task...</div>
+          <div id="shareLink" class="hero-share" hidden>
+            <span id="sharedLinkText" hidden></span>
+            <button onclick="copyLink()" class="hero-copy" type="button"><i class="bi bi-copy" aria-hidden="true"></i> Copy session link</button>
+          </div>
+        </div>
+      </div>
+      <div class="hero-right-column">
+      <figure class="team-photo">
+      <img src="/images/sales_portals_team_planning.png" alt="Sales Portals team gathered around a poker table" width="1774" height="887" decoding="async">
+      <figcaption><span class="team-photo-suit" aria-hidden="true">♠</span> Our team. One table. Every point counts.</figcaption>
+      </figure>
+      <aside class="round-guide" aria-labelledby="roundGuideTitle">
+        <div class="round-guide-heading"><div><p class="guide-eyebrow">Quick guide</p><h2 id="roundGuideTitle">How this round works</h2></div><span class="guide-step-count">3 steps</span></div>
+        <ol class="round-guide-steps">
+          <li><strong>Pick a card</strong><span>Choose your estimate independently.</span></li>
+          <li><strong>Wait for the team</strong><span>Votes stay private until the host reveals them.</span></li>
+          <li><strong>Reveal and discuss</strong><span>Compare estimates and align together.</span></li>
+        </ol>
+      </aside>
+ </div>
+    </section>
+
+    <div class="estimation-room-heading">
+      <div><p class="hero-eyebrow">Estimation room</p><h2>Pick your story points</h2></div>
+      <span id="heroVotingStatus" class="hero-voting-status" role="status">Waiting for a session</span>
     </div>
 
     <div class="row mt-4">
       <div class="col-md-4">
-        <input id="username" type="text" maxlength="6" class="form-control mb-2" placeholder="Your Name or VISA">
-        <input id="taskId" type="number" class="form-control mb-2" placeholder="Task ID">
-        <input id="taskDescription" maxlength="80" class="form-control mb-2" placeholder="STIX-XXX or Task Description">
-        <div class="d-grid gap-2">
-          <button onclick="startTask()" id="startTaskButton" class="btn btn-primary">Start a Task</button>
-          <button onclick="showJoinForm()" id="joinTaskButtonSecondary" class="btn btn-secondary" style="display: none;">Join a Task</button>
-          <button onclick="joinTask()" id="joinTaskButton" class="btn btn-primary" style="display: none;">Join</button>
-          <button onclick="goBack()" id="goBackButton" class="btn btn-secondary" style="display: none;">Go Back</button>
-        </div>
-
-        <div id="shareLink" class="mt-2 text-muted d-flex align-items-center">
-          <span id="sharedLinkText"></span>
-          <button onclick="copyLink()" class="btn btn-outline-secondary btn-sm ms-2" title="Copy link">
-            <i class="bi bi-copy"></i>
-          </button>
-        </div>
-
         <div class="summary-box mt-4" id="estimationSummaryBox">
           <h5><i class="bi bi-calculator"></i> Estimation Calculator</h5>
           <div class="small text-muted mb-2">Select domains, fill criteria, then use the suggested story point for voting.</div>
@@ -84,7 +124,6 @@
       </div>
 
       <div class="col-md-8">
-        <div id="taskDetails" class="alert alert-info">Please start or join a task...</div>
 
         <div id="estimationDetailPopover" class="d-none"></div>
 
@@ -570,23 +609,18 @@
     if (taskIdFromURL) {
       document.getElementById('taskId').value = taskIdFromURL;
       document.getElementById('taskId').disabled = false;
-      document.getElementById('taskDescription').style.display = 'none';
-      document.getElementById('startTaskButton').style.display = 'none';
-      document.getElementById('joinTaskButton').style.display = 'inline-block';
       document.getElementById('shareLink').style.display = 'none';
 
       fetch(`/getTaskInfo?taskId=${taskIdFromURL}`)
         .then(response => response.json())
         .then(data => {
           if (data.taskDescription) {
-            document.getElementById('taskDetails').innerText = `Task: ${taskIdFromURL} - ${data.taskDescription}`;
+            displayTaskDetails(taskIdFromURL, data.taskDescription);
           } else {
             document.getElementById('taskDetails').innerText = 'Task not found';
           }
         })
         .catch(err => console.error('Error fetching task info:', err));
-    } else {
-      document.getElementById('joinTaskButtonSecondary').style.display = 'inline-block';
     }
 
     socket.on('taskError', (message) => alert(message));
@@ -598,13 +632,6 @@
         .catch(() => alert('Failed to copy link.'));
     }
 
-    function showJoinForm() {
-      document.getElementById('taskDescription').style.display = 'none';
-      document.getElementById('startTaskButton').style.display = 'none';
-      document.getElementById('joinTaskButton').style.display = 'inline-block';
-      document.getElementById('goBackButton').style.display = 'inline-block';
-      document.getElementById('joinTaskButtonSecondary').style.display = 'none';
-    }
 
     function removeCustomCriteria(rowId) {
       const row = document.getElementById(rowId);
@@ -676,13 +703,6 @@
         updateEstimationSummary();
       }
 
-    function goBack() {
-      document.getElementById('taskDescription').style.display = 'inline-block';
-      document.getElementById('startTaskButton').style.display = 'inline-block';
-      document.getElementById('joinTaskButton').style.display = 'none';
-      document.getElementById('goBackButton').style.display = 'none';
-      document.getElementById('joinTaskButtonSecondary').style.display = 'inline';
-    }
 
     function calculateDifference(users) {
       const voteValues = Object.values(users)
@@ -755,22 +775,29 @@
       if (!taskId) { alert('Task ID is required!'); return; }
 
       currentTaskId = taskId;
-      socket.emit('startTask', { taskId, taskDescription, user });
       registerSocketListeners();
+      socket.emit('startTask', { taskId, taskDescription, user });
     }
 
     function joinTask() {
       const user = document.getElementById('username').value.toUpperCase();
-      const taskId = document.getElementById('taskId').value || taskIdFromURL;
+      const taskId = document.getElementById('taskId').value;
 
       if (!user) { alert('Username is required!'); return; }
 
+      if (!taskId) { alert('Task ID is required!'); return; }
+
       currentTaskId = taskId;
-      socket.emit('joinTask', { taskId, user });
       registerSocketListeners();
+      socket.emit('joinTask', { taskId, user });
     }
 
     function registerSocketListeners() {
+      socket.off('sessionJoined');
+      socket.on('sessionJoined', ({ taskId }) => {
+        currentTaskId = taskId;
+        setSessionActive(true);
+      });
       socket.off('isHost');
       socket.off('shareLink');
       socket.off('taskInfo');
@@ -780,7 +807,8 @@
       socket.off('resetAllVotes');
 
       socket.on('isHost', (hostStatus) => {
-        isHost = hostStatus;
+        isHost = hostStatus === true;
+        window.dispatchEvent(new Event('session-role-changed'));
         document.getElementById('hostControls').style.display = isHost ? 'block' : 'none';
       });
 
@@ -1012,7 +1040,10 @@
     }
 
     function displayTaskDetails(taskId, taskDescription) {
-      document.getElementById('taskDetails').innerText = `Task: ${taskId} - ${taskDescription || ''}`;
+      const details = document.getElementById('taskDetails');
+      const description = (taskDescription || '').trim();
+      details.textContent = description ? `Task: ${taskId} - ${description}` : '';
+      details.hidden = !description;
     }
 
     function updateUserList(users, reveal) {

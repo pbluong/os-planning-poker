@@ -125,6 +125,45 @@ input[id="username"] { text-transform: uppercase; }
   color: var(--app-heading);
 }
 
+.team-photo {
+  position: relative;
+  width: min(100%, 420px);
+  margin: 16px auto 20px;
+  padding: clamp(5px, 1vw, 9px);
+  border: 1px solid color-mix(in srgb, #d5a44b 50%, var(--app-border));
+  border-radius: 22px;
+  background: linear-gradient(145deg, color-mix(in srgb, #d5a44b 18%, var(--app-surface)), var(--app-surface) 65%);
+  box-shadow: 0 14px 36px var(--app-card-shadow), 0 2px 8px rgba(127, 88, 28, 0.1);
+  overflow: hidden;
+}
+
+.team-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 15px;
+}
+
+.team-photo figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 12px 8px 5px;
+  color: var(--app-text);
+  font-size: clamp(0.72rem, 2vw, 0.85rem);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-align: center;
+}
+
+.team-photo-suit {
+  color: #b17c25;
+  font-size: 1.15rem;
+}
+
+[data-theme="dark"] .team-photo-suit { color: #e4bf63; }
+
 .secutix-logo {
   position: absolute;
   left: 0;

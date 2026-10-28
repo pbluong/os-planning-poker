@@ -9,6 +9,16 @@ const io = new Server(server);
 
 let sessions = {};
 
+function syncHostRole(taskId) {
+  const session = sessions[taskId];
+  if (!session) return;
+  for (const client of io.sockets.sockets.values()) {
+    if (client.data.membership?.taskId === taskId) {
+      client.emit('isHost', client.id === session.hostSocketId);
+    }
+  }
+}
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 function createUserState() {
@@ -76,20 +86,57 @@ app.get('/getTaskInfo', (req, res) => {
 io.on('connection', (socket) => {
   console.log('A user connected');
 
+  function leaveSession() {
+    const membership = socket.data.membership;
+    if (!membership) return;
+    const { taskId, user } = membership;
+    socket.leave(taskId);
+    delete socket.data.membership;
+    const session = sessions[taskId];
+    if (!session) return;
+    delete session.users[user];
+    delete session.votes[user];
+    const remaining = Object.keys(session.users);
+    if (!remaining.length) {
+      delete sessions[taskId];
+      return;
+    }
+    if (session.hostSocketId === socket.id) {
+      const successor = [...io.sockets.sockets.values()].find(client => client.data.membership?.taskId === taskId);
+      session.host = successor.data.membership.user;
+      session.hostSocketId = successor.id;
+    }
+    syncHostRole(taskId);
+    io.to(taskId).emit('taskInfo', { taskId, taskDescription: session.taskDescription, users: session.users });
+    io.to(taskId).emit('votesUpdate', session.users, session.revealed, calculateAverageVote(session.votes));
+  }
+
+  socket.on('leaveSession', (acknowledge) => {
+    leaveSession();
+    if (typeof acknowledge === 'function') acknowledge();
+  });
+  socket.on('disconnect', leaveSession);
+
   // Host initiates a task session
   socket.on('startTask', ({ taskId, taskDescription, user }) => {
+    if (socket.data.membership) return;
+    if (!taskId || !user) return socket.emit('taskError', 'Name and task ID are required.');
+    if (sessions[taskId]) return socket.emit('taskError', 'Task already exists. Use Join a Task.');
     if (!sessions[taskId]) {
       sessions[taskId] = {
         taskDescription,
         host: user,
+        hostSocketId: socket.id,
         revealed: false,
         votes: {},
         users: { [user]: createUserState() }
       };
     }
     socket.join(taskId);
+    socket.data.membership = { taskId, user };
+    socket.emit('sessionJoined', { taskId });
     io.to(taskId).emit('taskInfo', { taskId, taskDescription, users: sessions[taskId].users });
-    socket.emit('isHost', true);
+    syncHostRole(taskId);
 
     // Emit share link to host
     const shareLink = `https://os-planning-poker.onrender.com/?taskId=${taskId}`;
@@ -97,17 +144,23 @@ io.on('connection', (socket) => {
   });
 
   socket.on('joinTask', ({ taskId, user }) => {
+    if (socket.data.membership) return;
+    if (!taskId || !user) return socket.emit('taskError', 'Name and task ID are required.');
     // Check if the session exists
     if (!sessions[taskId]) {
       socket.emit('taskError', 'Task not found.');
       return;
     }
   
+    if (sessions[taskId].users[user]) return socket.emit('taskError', 'This name is already in the session.');
     // Add the user to the session if not already added
     if (!sessions[taskId].users[user]) {
       sessions[taskId].users[user] = createUserState();
     }
     socket.join(taskId);
+    socket.data.membership = { taskId, user };
+    socket.emit('sessionJoined', { taskId });
+    syncHostRole(taskId);
   
     // Send task info, including taskDescription, to the user
     socket.emit('taskInfo', {
@@ -129,6 +182,7 @@ io.on('connection', (socket) => {
 
   // Handle vote casting, reveal, and reset as previously described
   socket.on('castVote', ({ taskId, user, vote, estimation }) => {
+    if (socket.data.membership?.taskId !== taskId || socket.data.membership.user !== user) return;
     if (!sessions[taskId]) return;
     if (sessions[taskId].revealed) {
       socket.emit('votesLocked');
@@ -155,6 +209,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('revealVotes', (taskId) => {
+    if (socket.data.membership?.taskId !== taskId || sessions[taskId]?.hostSocketId !== socket.id) return;
     if (sessions[taskId]) {
       sessions[taskId].revealed = true;
       const averageVote = calculateAverageVote(sessions[taskId].votes);
@@ -165,6 +220,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('resetVotes', (taskId) => {
+    if (socket.data.membership?.taskId !== taskId || sessions[taskId]?.hostSocketId !== socket.id) return;
     if (sessions[taskId]) {
       sessions[taskId].votes = {};
       sessions[taskId].revealed = false;
