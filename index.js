@@ -77,7 +77,7 @@ app.get('/getTaskInfo', (req, res) => {
   // Find task details based on taskId (example only, use your actual data source)
   const task = sessions[taskId];
   if (task) {
-    res.json({ taskId: task.taskId, taskDescription: task.taskDescription });
+    res.json({ taskId, taskDescription: task.taskDescription });
   } else {
     res.status(404).json({ message: 'Task not found' });
   }
@@ -94,18 +94,18 @@ io.on('connection', (socket) => {
     delete socket.data.membership;
     const session = sessions[taskId];
     if (!session) return;
-    delete session.users[user];
-    delete session.votes[user];
-    const remaining = Object.keys(session.users);
-    if (!remaining.length) {
+    if (session.hostSocketId === socket.id) {
       delete sessions[taskId];
+      for (const client of io.sockets.sockets.values()) {
+        if (client.data.membership?.taskId !== taskId) continue;
+        client.leave(taskId);
+        delete client.data.membership;
+        client.emit('sessionEnded', { taskId, host: user });
+      }
       return;
     }
-    if (session.hostSocketId === socket.id) {
-      const successor = [...io.sockets.sockets.values()].find(client => client.data.membership?.taskId === taskId);
-      session.host = successor.data.membership.user;
-      session.hostSocketId = successor.id;
-    }
+    delete session.users[user];
+    delete session.votes[user];
     syncHostRole(taskId);
     io.to(taskId).emit('taskInfo', { taskId, taskDescription: session.taskDescription, users: session.users });
     io.to(taskId).emit('votesUpdate', session.users, session.revealed, calculateAverageVote(session.votes));

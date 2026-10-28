@@ -1,4 +1,5 @@
 function setSessionActive(active) {
+  if (active) document.getElementById('sessionEndNotice')?.remove();
   ['startTaskButton', 'joinTaskButton'].forEach(id => {
     document.getElementById(id).hidden = active;
   });
@@ -14,6 +15,11 @@ function leaveCurrentSession() {
   const button = document.getElementById('newSessionButton');
   button.disabled = true;
   socket.emit('leaveSession', () => {
+    resetSessionScreen();
+  });
+}
+
+function resetSessionScreen() {
     // Reset only after the server has removed this socket from the room.
     ['isHost', 'shareLink', 'taskInfo', 'votesUpdate', 'votesLocked', 'resetAllVotes', 'sessionJoined'].forEach(event => socket.off(event));
     currentTaskId = null;
@@ -44,7 +50,18 @@ function leaveCurrentSession() {
     url.searchParams.delete('taskId');
     history.replaceState(null, '', url);
     setSessionActive(false);
-    button.disabled = false;
+    document.getElementById('newSessionButton').disabled = false;
     document.getElementById('taskId').focus();
-  });
 }
+
+socket.on('sessionEnded', ({ taskId, host }) => {
+  if (currentTaskId !== taskId) return;
+  resetSessionScreen();
+  document.getElementById('sessionEndNotice')?.remove();
+  const notice = document.createElement('div');
+  notice.id = 'sessionEndNotice';
+  notice.className = 'alert alert-info session-end-notice';
+  notice.setAttribute('role', 'status');
+  notice.textContent = 'The host (' + host + ') left session #' + taskId + '. The session has ended. Start or join another session below.';
+  document.querySelector('.hero-session-form').before(notice);
+});

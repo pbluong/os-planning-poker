@@ -612,9 +612,9 @@
       document.getElementById('shareLink').style.display = 'none';
 
       fetch(`/getTaskInfo?taskId=${taskIdFromURL}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.taskDescription) {
+        .then(async response => ({ found: response.ok, data: await response.json() }))
+        .then(({ found, data }) => {
+          if (found) {
             displayTaskDetails(taskIdFromURL, data.taskDescription);
           } else {
             document.getElementById('taskDetails').innerText = 'Task not found';
