@@ -191,6 +191,23 @@ body.session-active .planning-hero .app-title { font-size: clamp(1.6rem, 3vw, 2.
 .donate-dialog h2 { margin: 4px 0 8px; color: var(--app-heading); font-size: 1.2rem; }
 .donate-dialog p { margin: 0 auto 18px; max-width: 270px; color: var(--app-text-muted); font-size: 0.8rem; line-height: 1.6; }
 .donate-dialog img { display: block; width: min(200px, 100%); height: auto; margin: 0 auto 12px; border: 1px solid var(--app-border); border-radius: 14px; }
+.donate-dialog { transition: width 0.2s ease; }
+.donate-qr-toggle { display: block; margin: 0 auto; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+.donate-qr-toggle img { transition: width 0.2s ease; }
+.donate-qr-toggle:focus-visible { outline: 2px solid var(--app-heading); outline-offset: 4px; border-radius: 14px; }
+.donate-qr-size-link { display: inline-flex; align-items: center; gap: 6px; margin: 0 auto 10px; padding: 4px 10px; border: 1px solid var(--app-border); border-radius: 999px; background: transparent; color: var(--app-text-muted); font-size: 0.72rem; }
+.donate-qr-size-link:hover { background: var(--app-surface-muted); color: var(--app-text); }
+.donate-qr-size-link + small { display: block; }
+.donate-dialog.qr-enlarged { width: min(560px, calc(100vw - 16px)); padding: 40px 20px 16px; }
+.donate-dialog.qr-enlarged .donate-qr-toggle { cursor: zoom-out; }
+.donate-dialog.qr-enlarged .donate-qr-toggle img { width: min(480px, 100%, calc(100vh - 140px)); margin-bottom: 10px; }
+.donate-dialog.qr-enlarged .donate-dialog-icon,
+.donate-dialog.qr-enlarged .guide-eyebrow,
+.donate-dialog.qr-enlarged h2,
+.donate-dialog.qr-enlarged #donationQrSection p,
+.donate-dialog.qr-enlarged #donationQrSection small,
+.donate-dialog.qr-enlarged #donationBroadcastButton { display: none; }
+.donate-dialog.qr-enlarged .donate-qr-size-link { margin-bottom: 0; }
 .donate-dialog small { color: var(--app-text-muted); font-size: 0.68rem; }
 .donate-confirm { display: block; width: 100%; margin-top: 16px; padding: 11px 14px; border: 0; border-radius: 12px; background: #cf3c64; color: #fff; font-size: 0.8rem; font-weight: 700; }
 .donate-confirm:hover, .donate-confirm:focus-visible { background: #b52a52; }

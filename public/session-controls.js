@@ -17,6 +17,7 @@ function openDonateDialog() {
   const isCreator = document.getElementById('username').value.trim().toUpperCase() === 'PBL';
   document.getElementById('donationBroadcastButton').hidden = !isCreator;
   hideDonationBroadcastForm();
+  toggleDonationQrSize(false);
   if (!dialog.open) dialog.showModal();
 }
 
@@ -24,7 +25,20 @@ function closeDonateDialog() {
   document.getElementById('donateDialog').close();
 }
 
+function toggleDonationQrSize(forceEnlarged) {
+  const dialog = document.getElementById('donateDialog');
+  const enlarged = dialog.classList.toggle('qr-enlarged', forceEnlarged);
+  const label = enlarged ? 'Shrink QR code' : 'Enlarge QR code';
+  const toggle = document.getElementById('donationQrToggle');
+  toggle.setAttribute('aria-pressed', String(enlarged));
+  toggle.title = label;
+  const link = document.getElementById('donationQrToggleLabel');
+  link.querySelector('span').textContent = label;
+  link.querySelector('i').className = enlarged ? 'bi bi-arrows-angle-contract' : 'bi bi-arrows-angle-expand';
+}
+
 function showDonationBroadcastForm() {
+  toggleDonationQrSize(false);
   document.getElementById('donationBroadcastButton').hidden = true;
   document.getElementById('donationQrSection').hidden = true;
   document.getElementById('donationBroadcastForm').hidden = false;

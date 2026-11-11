@@ -99,7 +99,10 @@
       <h2 id="donateTitle">Support this planning table</h2>
       <div id="donationQrSection">
         <p>Scan the QR code with MoMo to send a small thank-you.</p>
-        <img src="/images/pbl_momo.png.jpg" alt="MoMo donation QR code" width="200" height="200">
+        <button type="button" id="donationQrToggle" class="donate-qr-toggle" onclick="toggleDonationQrSize()" aria-pressed="false" title="Enlarge QR code">
+          <img src="/images/pbl_momo.png.jpg" alt="MoMo donation QR code" width="200" height="200">
+        </button>
+        <button type="button" id="donationQrToggleLabel" class="donate-qr-size-link" onclick="toggleDonationQrSize()"><i class="bi bi-arrows-angle-expand" aria-hidden="true"></i> <span>Enlarge QR code</span></button>
         <small>Any contribution is appreciated.</small>
       </div>
       <button type="button" id="donationBroadcastButton" class="donate-confirm" onclick="showDonationBroadcastForm()" hidden><i class="bi bi-megaphone-fill" aria-hidden="true"></i> Broadcast a thank-you</button>
