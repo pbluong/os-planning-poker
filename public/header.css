@@ -29,15 +29,18 @@
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
   align-items: center;
-  gap: clamp(24px, 4vw, 64px);
-  padding: clamp(24px, 4vw, 48px);
+  gap: clamp(18px, 3vw, 36px);
+  padding: clamp(20px, 3vw, 30px);
   border: 1px solid color-mix(in srgb, var(--app-primary) 20%, var(--app-border));
   border-radius: 26px;
   background: radial-gradient(ellipse at 100% 0%, var(--app-primary-shadow), transparent 65%), var(--app-primary-soft);
   box-shadow: 0 16px 36px var(--app-card-shadow);
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 .hero-session-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.hero-donate { border: 0; border-radius: 999px; padding: 8px 12px; background: color-mix(in srgb, #e85978 13%, var(--app-surface)); color: #b52a52; font-size: 0.72rem; font-weight: 700; }
+.hero-donate:hover, .hero-donate:focus-visible { background: color-mix(in srgb, #e85978 22%, var(--app-surface)); }
+.hero-donate i { margin-right: 6px; }
 .hero-session-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -137,7 +140,7 @@
 .hero-tags b { color: var(--app-text-muted); font-weight: 500; margin-left: 4px; }
 .planning-hero .team-photo {
   width: 100%;
-  max-width: 380px;
+  max-width: 340px;
   justify-self: end;
   margin: 0;
   padding: 7px;
@@ -149,9 +152,9 @@
 }
 .planning-hero .team-photo img { border-radius: 13px; }
 .planning-hero .team-photo figcaption { font-size: 0.67rem; letter-spacing: 0; padding: 10px 2px 4px; gap: 6px; }
-.hero-right-column { display: grid; gap: 16px; width: 100%; max-width: 400px; justify-self: end; }
+.hero-right-column { display: grid; gap: 12px; width: 100%; max-width: 350px; justify-self: end; }
 .hero-right-column .team-photo { max-width: 100%; transform: none; }
-.round-guide { padding: 20px; border: 1px solid var(--app-border); border-radius: 18px; background: var(--app-surface); box-shadow: 0 8px 24px var(--app-card-shadow); }
+.round-guide { padding: 16px; border: 1px solid var(--app-border); border-radius: 18px; background: var(--app-surface); box-shadow: 0 8px 24px var(--app-card-shadow); }
 .round-guide-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
 .guide-eyebrow { margin: 0 0 5px; color: var(--app-primary); font-size: 0.58rem; font-weight: 750; letter-spacing: 0.1em; text-transform: uppercase; }
 .round-guide h2 { margin: 0; font-size: 1rem; color: var(--app-heading); letter-spacing: -0.02em; }
@@ -172,15 +175,51 @@
 .round-readiness.is-complete .round-readiness-icon, .round-readiness.is-complete .guide-step-count { background: color-mix(in srgb, #20a67b 15%, var(--app-surface)); color: var(--app-text); }
 .active-session-summary .round-readiness { margin: 14px 0 12px; padding: 12px; background: var(--app-surface-muted); box-shadow: none; }
 .active-session-summary .round-readiness p { margin: 4px 0 0; font-size: 0.68rem; color: var(--app-text-muted); }
+body.session-active .planning-hero { grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.75fr); justify-content: initial; align-items: start; padding: 18px 24px; margin-bottom: 16px; }
+body.session-active .hero-right-column { display: grid; justify-self: end; }
+body.session-active .hero-description { display: none; }
+body.session-active .planning-hero-copy { width: 100%; }
+body.session-active .hero-eyebrow { margin-bottom: 12px; }
+body.session-active .hero-heading { gap: 12px; }
+body.session-active .hero-suit { flex-basis: 42px; height: 42px; border-radius: 13px; font-size: 24px; }
+body.session-active .planning-hero .app-title { font-size: clamp(1.6rem, 3vw, 2.25rem); }
+.donate-dialog { width: min(360px, calc(100vw - 32px)); padding: 28px; border: 1px solid var(--app-border); border-radius: 22px; background: var(--app-surface); color: var(--app-text); box-shadow: 0 24px 70px var(--app-card-shadow); text-align: center; }
+.donate-dialog::backdrop { background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(3px); }
+.donate-dialog-close { position: absolute; top: 10px; right: 12px; border: 0; border-radius: 8px; background: transparent; color: var(--app-text-muted); font-size: 24px; line-height: 1; }
+.donate-dialog-close:hover { background: var(--app-surface-muted); color: var(--app-text); }
+.donate-dialog-icon { display: grid; place-items: center; width: 44px; height: 44px; margin: 0 auto 12px; border-radius: 14px; background: color-mix(in srgb, #e85978 15%, var(--app-surface)); color: #cf3c64; }
+.donate-dialog h2 { margin: 4px 0 8px; color: var(--app-heading); font-size: 1.2rem; }
+.donate-dialog p { margin: 0 auto 18px; max-width: 270px; color: var(--app-text-muted); font-size: 0.8rem; line-height: 1.6; }
+.donate-dialog img { display: block; width: min(200px, 100%); height: auto; margin: 0 auto 12px; border: 1px solid var(--app-border); border-radius: 14px; }
+.donate-dialog small { color: var(--app-text-muted); font-size: 0.68rem; }
+.donate-confirm { display: block; width: 100%; margin-top: 16px; padding: 11px 14px; border: 0; border-radius: 12px; background: #cf3c64; color: #fff; font-size: 0.8rem; font-weight: 700; }
+.donate-confirm:hover, .donate-confirm:focus-visible { background: #b52a52; }
+.donate-confirm i { margin-right: 7px; }
+.donation-broadcast-form { margin-top: 16px; text-align: left; }
+.donation-broadcast-form label { display: block; margin: 12px 0 5px; color: var(--app-heading); font-size: 0.72rem; font-weight: 700; }
+.donation-broadcast-form .form-control { border-color: var(--app-border); font-size: 0.78rem; }
+.donation-broadcast-form textarea { resize: vertical; }
+.donation-form-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.donation-toast { position: fixed; right: 20px; bottom: 20px; z-index: 1100; display: flex; align-items: flex-start; gap: 12px; width: min(370px, calc(100vw - 32px)); padding: 15px; border: 1px solid color-mix(in srgb, #e85978 35%, var(--app-border)); border-radius: 16px; background: var(--app-surface); box-shadow: 0 16px 42px var(--app-card-shadow); animation: donation-toast-in 0.35s cubic-bezier(.2,.8,.2,1); }
+.donation-toast-icon { display: grid; place-items: center; flex: 0 0 38px; height: 38px; border-radius: 12px; background: color-mix(in srgb, #e85978 16%, var(--app-surface)); color: #cf3c64; }
+.donation-toast strong { display: block; color: var(--app-heading); font-size: 0.8rem; }
+.donation-toast p { margin: 4px 0 0; color: var(--app-text-muted); font-size: 0.72rem; line-height: 1.5; }
+.donation-toast-method { display: inline-block; margin-top: 3px; color: #cf3c64; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.donation-toast button { margin-left: auto; padding: 0; border: 0; background: transparent; color: var(--app-text-muted); font-size: 22px; line-height: 1; }
+.donation-toast button:hover { color: var(--app-text); }
+@keyframes donation-toast-in { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @media (max-width: 768px) {
   .hero-right-column { justify-self: center; }
   .app-header { min-height: 54px; padding: 0 0 12px; align-items: center !important; gap: 12px; }
   .app-header .secutix-logo { width: 108px; }
   .app-workspace { font-size: 0.6rem; padding-right: 12px; letter-spacing: 0.06em; }
-  .planning-hero { grid-template-columns: 1fr; gap: 26px; border-radius: 20px; margin-bottom: 24px; }
+  .planning-hero { grid-template-columns: 1fr; gap: 20px; padding: 20px; border-radius: 20px; margin-bottom: 20px; }
   .planning-hero .team-photo { justify-self: center; max-width: 340px; transform: none; }
   .hero-eyebrow { font-size: 0.6rem; margin-bottom: 18px; }
   .hero-suit { flex-basis: 48px; height: 48px; font-size: 28px; border-radius: 14px; }
   .hero-heading { gap: 12px; }
   .hero-description { margin: 16px 0 20px; font-size: 0.9rem; }
+  body.session-active .planning-hero { display: block; padding: 16px; }
+  body.session-active .hero-right-column { margin: 18px auto 0; }
+  body.session-active .hero-session-form { margin-bottom: 8px; }
 }

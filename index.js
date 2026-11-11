@@ -180,6 +180,17 @@ io.on('connection', (socket) => {
     );
   });
 
+  socket.on('donationAnnouncement', ({ taskId, message }) => {
+    const membership = socket.data.membership;
+    if (!membership || membership.user !== 'PBL' || membership.taskId !== taskId || !sessions[taskId]) return;
+    const cleanMessage = typeof message === 'string' ? message.trim().slice(0, 180) : '';
+    if (!cleanMessage) return;
+    const now = Date.now();
+    if (socket.data.lastDonationAt && now - socket.data.lastDonationAt < 10_000) return;
+    socket.data.lastDonationAt = now;
+    io.to(taskId).emit('donationAnnounced', { creator: membership.user, message: cleanMessage });
+  });
+
   // Handle vote casting, reveal, and reset as previously described
   socket.on('castVote', ({ taskId, user, vote, estimation }) => {
     if (socket.data.membership?.taskId !== taskId || socket.data.membership.user !== user) return;

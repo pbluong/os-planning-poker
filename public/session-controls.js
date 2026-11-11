@@ -1,4 +1,5 @@
 function setSessionActive(active) {
+  document.body.classList.toggle('session-active', active);
   if (active) document.getElementById('sessionEndNotice')?.remove();
   ['startTaskButton', 'joinTaskButton'].forEach(id => {
     document.getElementById(id).hidden = active;
@@ -11,6 +12,60 @@ function setSessionActive(active) {
   });
 }
 
+function openDonateDialog() {
+  const dialog = document.getElementById('donateDialog');
+  const isCreator = document.getElementById('username').value.trim().toUpperCase() === 'PBL';
+  document.getElementById('donationBroadcastButton').hidden = !isCreator;
+  hideDonationBroadcastForm();
+  if (!dialog.open) dialog.showModal();
+}
+
+function closeDonateDialog() {
+  document.getElementById('donateDialog').close();
+}
+
+function showDonationBroadcastForm() {
+  document.getElementById('donationBroadcastButton').hidden = true;
+  document.getElementById('donationQrSection').hidden = true;
+  document.getElementById('donationBroadcastForm').hidden = false;
+  document.getElementById('donationThankYou').focus();
+}
+
+function hideDonationBroadcastForm() {
+  const form = document.getElementById('donationBroadcastForm');
+  form.hidden = true;
+  form.reset();
+  document.getElementById('donationQrSection').hidden = false;
+  document.getElementById('donationBroadcastButton').hidden = document.getElementById('username').value.trim().toUpperCase() !== 'PBL';
+}
+
+function broadcastDonationThanks(event) {
+  event.preventDefault();
+  if (!currentTaskId) return;
+  if (document.getElementById('username').value.trim().toUpperCase() !== 'PBL') return;
+  const message = document.getElementById('donationThankYou').value.trim();
+  if (!message) return;
+  socket.emit('donationAnnouncement', { taskId: currentTaskId, message });
+  closeDonateDialog();
+}
+
+function showDonationToast(creator, message) {
+  document.getElementById('donationToast')?.remove();
+  const toast = document.createElement('div');
+  toast.id = 'donationToast';
+  toast.className = 'donation-toast';
+  toast.setAttribute('role', 'status');
+  toast.innerHTML = '<span class="donation-toast-icon" aria-hidden="true"><i class="bi bi-heart-fill"></i></span><div><strong>Kindness at the table</strong><p></p></div><button type="button" aria-label="Dismiss donation announcement">×</button>';
+  toast.querySelector('p').textContent = creator + ': ' + message;
+  toast.querySelector('button').addEventListener('click', () => toast.remove());
+  document.body.append(toast);
+  window.setTimeout(() => toast.remove(), 7000);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('donationBroadcastForm').addEventListener('submit', broadcastDonationThanks);
+});
+
 function leaveCurrentSession() {
   const button = document.getElementById('newSessionButton');
   button.disabled = true;
@@ -21,7 +76,7 @@ function leaveCurrentSession() {
 
 function resetSessionScreen() {
     // Reset only after the server has removed this socket from the room.
-    ['isHost', 'shareLink', 'taskInfo', 'votesUpdate', 'votesLocked', 'resetAllVotes', 'sessionJoined'].forEach(event => socket.off(event));
+    ['isHost', 'shareLink', 'taskInfo', 'votesUpdate', 'votesLocked', 'resetAllVotes', 'sessionJoined', 'donationAnnounced'].forEach(event => socket.off(event));
     currentTaskId = null;
     isHost = false;
     currentVotesRevealed = false;
@@ -29,6 +84,7 @@ function resetSessionScreen() {
     currentAverageVote = null;
     userDeckWasRevealed = false;
     lastVotesUpdateAt = 0;
+    shouldAutoScrollToVoting = false;
     closeAvatarPreview();
     document.querySelectorAll('[data-bs-toggle="popover"]').forEach(el => bootstrap.Popover.getInstance(el)?.dispose());
     resetCharts();
