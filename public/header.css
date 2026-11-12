@@ -198,9 +198,16 @@ body.session-active .planning-hero .app-title { font-size: clamp(1.6rem, 3vw, 2.
 .donate-qr-size-link { display: inline-flex; align-items: center; gap: 6px; margin: 0 auto 10px; padding: 4px 10px; border: 1px solid var(--app-border); border-radius: 999px; background: transparent; color: var(--app-text-muted); font-size: 0.72rem; }
 .donate-qr-size-link:hover { background: var(--app-surface-muted); color: var(--app-text); }
 .donate-qr-size-link + small { display: block; }
-.donate-dialog.qr-enlarged { width: min(560px, calc(100vw - 16px)); padding: 40px 20px 16px; }
+/* Enlarged QR: the dialog is sized to the viewport and the QR (1098x1200, ratio ~1.093) is fitted to whichever
+   dimension is tighter, so it never scrolls. Vertical chrome = 8px margins x2 + 40/16 padding + 2 border + 10 gap + ~30 button. */
+.donate-dialog.qr-enlarged { width: min(560px, calc(100vw - 16px)); max-width: calc(100vw - 16px); max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); overflow: hidden; padding: 40px 20px 16px; }
 .donate-dialog.qr-enlarged .donate-qr-toggle { cursor: zoom-out; }
-.donate-dialog.qr-enlarged .donate-qr-toggle img { width: min(480px, 100%, calc(100vh - 140px)); margin-bottom: 10px; }
+.donate-dialog.qr-enlarged .donate-qr-toggle img {
+  width: min(480px, calc(100vw - 58px), calc((100vh - 130px) / 1.093));
+  width: min(480px, calc(100vw - 58px), calc((100dvh - 130px) / 1.093));
+  min-width: 120px;
+  margin-bottom: 10px;
+}
 .donate-dialog.qr-enlarged .donate-dialog-icon,
 .donate-dialog.qr-enlarged .guide-eyebrow,
 .donate-dialog.qr-enlarged h2,
