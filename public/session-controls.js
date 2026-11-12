@@ -131,7 +131,7 @@ socket.on('sessionEnded', ({ taskId, host }) => {
   const notice = document.createElement('div');
   notice.id = 'sessionEndNotice';
   notice.className = 'session-end-notice';
-  notice.setAttribute('role', 'status');
+  notice.setAttribute('role', 'alert');
   const icon = document.createElement('span');
   icon.className = 'session-end-notice-icon';
   icon.setAttribute('aria-hidden', 'true');
@@ -151,4 +151,13 @@ socket.on('sessionEnded', ({ taskId, host }) => {
   dismiss.addEventListener('click', () => notice.remove());
   notice.append(icon, content, dismiss);
   document.querySelector('.hero-session-form').before(notice);
+  // Bring the notice into view so nobody keeps voting in the ended session.
+  closeDonateDialog();
+  notice.tabIndex = -1;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.requestAnimationFrame(() => {
+    notice.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    notice.focus({ preventScroll: true });
+    notice.classList.add('is-attention');
+  });
 });
